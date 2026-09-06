@@ -3,6 +3,7 @@ package org.vmstudio.visor.core.client.gui.screens;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.*;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import org.vmstudio.visor.core.client.ClientContext;
@@ -13,7 +14,7 @@ import org.vmstudio.visor.core.client.utils.ClientUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VRPauseMenuScreen extends Screen {
+public class VRPauseMenuScreen extends McScreen {
     private static final Component RETURN_TO_MENU = Component.translatable("menu.returnToMenu");
     private static final Component DISCONNECT = Component.translatable("menu.disconnect");
 
@@ -204,9 +205,7 @@ public class VRPauseMenuScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics gfx, int mouseX, int mouseY, float delta) {
-        super.renderBackground(gfx);
-
+    protected void renderContents(GuiGraphics gfx, int mouseX, int mouseY, float delta) {
         int cx = this.width / 2;
         int startY = this.height / 2 - totalColumnHeight() / 2;
 
@@ -236,7 +235,7 @@ public class VRPauseMenuScreen extends Screen {
             }
         }
 
-        super.render(gfx, mouseX, mouseY, delta);
+        super.renderContents(gfx, mouseX, mouseY, delta);
     }
 
     private int totalColumnHeight() {

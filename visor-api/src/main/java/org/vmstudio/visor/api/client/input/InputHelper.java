@@ -161,9 +161,9 @@ public class InputHelper {
                 .getOverlayManager()
                 .getKeyboardAccessor();
         Screen screen = keyboardAccessor.getAttachedTo();
-        if(screen instanceof VROverlayScreen){
+        if(screen instanceof VROverlayScreen overlay){
             //overlays
-            screen.charTyped(character,modifiers);
+            overlay.charTyped(character,modifiers);
             return true;
         }
         Minecraft mc = Minecraft.getInstance();

@@ -337,8 +337,8 @@ public class OptionsScreenRegion extends OptionsScreen<OverlayOptionsScreenRegio
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.renderContents(guiGraphics, mouseX, mouseY, partialTick);
         computePreviewArea();
         drawFramebufferPreview(guiGraphics);
         drawInteractiveRegionOverlay(guiGraphics);
@@ -569,8 +569,8 @@ public class OptionsScreenRegion extends OptionsScreen<OverlayOptionsScreenRegio
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean base = super.mouseClicked(mouseX, mouseY, button);
+    protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
+        boolean base = super.onMouseClicked(mouseX, mouseY, button);
         if (button != 0) return base;
 
         if (!inPreview((int) mouseX, (int) mouseY)) {
@@ -593,12 +593,12 @@ public class OptionsScreenRegion extends OptionsScreen<OverlayOptionsScreenRegio
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragDX, double dragDY) {
+    protected boolean onMouseDragged(double mouseX, double mouseY, int button, double dragDX, double dragDY) {
         if (activeHandle == DragHandle.NONE) {
-            return super.mouseDragged(mouseX, mouseY, button, dragDX, dragDY);
+            return super.onMouseDragged(mouseX, mouseY, button, dragDX, dragDY);
         }
         if (button != 0) {
-            return super.mouseDragged(mouseX, mouseY, button, dragDX, dragDY);
+            return super.onMouseDragged(mouseX, mouseY, button, dragDX, dragDY);
         }
 
         int dxPx = (int) Math.round((mouseX - dragStartMouseX) / Math.max(0.00001, previewScale));
@@ -676,8 +676,8 @@ public class OptionsScreenRegion extends OptionsScreen<OverlayOptionsScreenRegio
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        boolean base = super.mouseReleased(mouseX, mouseY, button);
+    protected boolean onMouseReleased(double mouseX, double mouseY, int button) {
+        boolean base = super.onMouseReleased(mouseX, mouseY, button);
         if (button == 0) {
             activeHandle = DragHandle.NONE;
         }

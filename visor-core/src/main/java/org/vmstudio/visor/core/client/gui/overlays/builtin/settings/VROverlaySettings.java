@@ -337,7 +337,7 @@ public class VROverlaySettings extends VROverlayScreen
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int buttonType) {
+    protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
         if (getForcedAnchor() != null) {
             setDragged(false);
             return true;
@@ -349,16 +349,16 @@ public class VROverlaySettings extends VROverlayScreen
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY, buttonType);
+        return super.onMouseClicked(mouseX, mouseY, buttonType);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int buttonType) {
+    protected boolean onMouseReleased(double mouseX, double mouseY, int buttonType) {
         if (getForcedAnchor() != null) {
             setDragged(false);
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, buttonType);
+        return super.onMouseReleased(mouseX, mouseY, buttonType);
     }
 
     @Override

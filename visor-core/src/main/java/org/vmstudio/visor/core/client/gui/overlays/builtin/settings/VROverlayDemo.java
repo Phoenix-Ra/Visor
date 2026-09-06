@@ -320,7 +320,7 @@ public class VROverlayDemo extends VROverlayScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int buttonType) {
+    protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
         if(movingByAnchor == null) return true;
         stopMovingByAnchor();
         return true;

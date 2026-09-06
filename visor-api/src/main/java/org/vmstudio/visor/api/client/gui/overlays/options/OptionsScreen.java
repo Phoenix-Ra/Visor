@@ -3,12 +3,12 @@ package org.vmstudio.visor.api.client.gui.overlays.options;
 import lombok.Getter;
 import org.vmstudio.visor.api.client.gui.GuiTexture;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public abstract class OptionsScreen<T extends OverlayOptionGroup<?>> extends Screen {
+public abstract class OptionsScreen<T extends OverlayOptionGroup<?>> extends McScreen {
     protected final T optionsGroup;
     protected Background background;
 
@@ -45,12 +45,16 @@ public abstract class OptionsScreen<T extends OverlayOptionGroup<?>> extends Scr
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderScreenBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if(background != Background.EMPTY) {
             background.render(guiGraphics, cursorBoundsX, cursorBoundsY);
         }
+    }
+
+    @Override
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         onRender(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.renderContents(guiGraphics, mouseX, mouseY, partialTick);
     }
 
 

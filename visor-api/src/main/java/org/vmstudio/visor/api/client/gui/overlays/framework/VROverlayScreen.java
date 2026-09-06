@@ -18,7 +18,6 @@ import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.common.VRException;
 import org.vmstudio.visor.api.common.addon.component.ComponentPriority;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -28,6 +27,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.vmstudio.visor.api.common.player.VRPose;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,7 +37,7 @@ import java.util.*;
  * {@link VROverlay} that is rendered
  * as a minecraft {@link Screen}
  */
-public abstract class VROverlayScreen extends Screen implements VROverlay {
+public abstract class VROverlayScreen extends McScreen implements VROverlay {
 
     private static VROverlayScreen renderingOverlay;
 
@@ -145,8 +146,6 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
         this.id = id.toLowerCase();
         this.priority = priority;
         this.pose = new VROverlayPose(this, overlayScale);
-
-        this.minecraft = Minecraft.getInstance();
 
         optionsMap = new LinkedHashMap<>();
         List<OverlayOptionGroup<?>> preOptions = createOptions();
@@ -272,9 +271,9 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
 
 
     @Override
-    public final void render(@NotNull GuiGraphics guiGraphics,
-                             int pMouseX, int pMouseY,
-                             float partialTicks
+    protected final void renderContents(@NotNull GuiGraphics guiGraphics,
+                                        int pMouseX, int pMouseY,
+                                        float partialTicks
     ) {
         if (initAgain) {
             init();
@@ -304,7 +303,7 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
                     partialTicks
             );
 
-            super.render(guiGraphics, pMouseX, pMouseY, partialTicks);
+            super.renderContents(guiGraphics, pMouseX, pMouseY, partialTicks);
 
             onRender(
                     guiGraphics,
@@ -331,7 +330,9 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
 
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics) {
+    protected void renderScreenBackground(@NotNull GuiGraphics guiGraphics,
+                                          int mouseX, int mouseY,
+                                          float partialTicks) {
         //empty
     }
 
@@ -366,8 +367,8 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
                 getRequestedWidth(),
                 getRequestedHeight()
         );
-        init(
-                Minecraft.getInstance(),
+        McGuiUtils.initScreen(
+                this,
                 getRequestedWidthScaled(),
                 getRequestedHeightScaled()
         );
@@ -610,7 +611,7 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
 
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int buttonType) {
+    protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
         if (buttonType == 0 && isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())) {
             startResizing();
             return true;
@@ -619,10 +620,10 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
             startDragging();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, buttonType);
+        return super.onMouseClicked(mouseX, mouseY, buttonType);
     }
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int buttonType) {
+    protected boolean onMouseReleased(double mouseX, double mouseY, int buttonType) {
         if (buttonType == 0 && isBeingResized()) {
             stopResizing();
             return true;
@@ -631,31 +632,44 @@ public abstract class VROverlayScreen extends Screen implements VROverlay {
             stopDragging();
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, buttonType);
-    }
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        return super.mouseScrolled(mouseX, mouseY, scrollDelta);
+        return super.onMouseReleased(mouseX, mouseY, buttonType);
     }
 
+    // ------ !!KEEP METHODS BELOW!! ------
+    // Remapping will break these methods if not overridden
     @Override
-    public void mouseMoved(double mouseX, double mouseY) {
-        super.mouseMoved(mouseX, mouseY);
+    public boolean mouseClicked(double mouseX, double mouseY, int buttonType) {
+        return onMouseClicked(mouseX, mouseY, buttonType);
+    }
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int buttonType) {
+        return onMouseReleased(mouseX, mouseY, buttonType);
     }
     @Override
     public boolean mouseDragged(double mouseX, double mouseY,
                                 int buttonType,
                                 double deltaX, double deltaY) {
-        return super.mouseDragged(mouseX, mouseY, buttonType, deltaX, deltaY);
+        return onMouseDragged(mouseX, mouseY, buttonType, deltaX, deltaY);
     }
-
     @Override
-    public boolean keyReleased(int i, int j, int k) {
-        return super.keyReleased(i, j, k);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        return onMouseScrolled(mouseX, mouseY, scrollDelta);
+    }
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        super.mouseMoved(mouseX, mouseY);
+    }
+    @Override
+    public boolean keyPressed(int keyCode, int keyScan, int modifiers) {
+        return onKeyPressed(keyCode, keyScan, modifiers);
+    }
+    @Override
+    public boolean keyReleased(int keyCode, int keyScan, int modifiers) {
+        return onKeyReleased(keyCode, keyScan, modifiers);
     }
     @Override
     public boolean charTyped(char chr, int modifiers) {
-        return super.charTyped(chr, modifiers);
+        return onCharTyped(chr, modifiers);
     }
 
     @Override

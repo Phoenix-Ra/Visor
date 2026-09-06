@@ -148,9 +148,9 @@ public class VROverlayThirdPersonCamera extends VROverlayScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX,
-                                 double mouseY,
-                                 double scrollDelta) {
+    protected boolean onMouseScrolled(double mouseX,
+                                      double mouseY,
+                                      double scrollDelta) {
         if(this.changingPosition){
             offsetZWaiting += (float) -scrollDelta * 0.01f;
         }
@@ -158,7 +158,7 @@ public class VROverlayThirdPersonCamera extends VROverlayScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int buttonType) {
+    protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
         if(this.changingPosition){
             setChangingPosition(false);
         }

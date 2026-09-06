@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -146,7 +147,8 @@ public class VROverlayManagerImpl implements VROverlayManager {
                 }
 
                 //render overlay texture
-                overlayScreen.renderWithTooltip(
+                McGuiUtils.renderWithTooltip(
+                        overlayScreen,
                         guiGraphics,
                         overlayScreen.getMouseX(),
                         overlayScreen.getMouseY(),

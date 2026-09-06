@@ -5,7 +5,7 @@ import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.screens.Screen;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import org.vmstudio.visor.api.client.input.InputHelper;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VRKeyboardScreen extends Screen {
+public class VRKeyboardScreen extends McScreen {
     @Getter
     @Setter
     private VROverlayKeyboard overlayKeyboard;
@@ -379,14 +379,14 @@ public class VRKeyboardScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics) {
+    protected void renderScreenBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
 
     }
 
     @Override
-    public boolean mouseReleased(double d, double e, int i) {
+    protected boolean onMouseReleased(double d, double e, int i) {
         clearPress();
-        return super.mouseReleased(d, e, i);
+        return super.onMouseReleased(d, e, i);
     }
 
     public void clearPress() {

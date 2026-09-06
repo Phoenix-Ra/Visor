@@ -41,8 +41,8 @@ public class OptionsScreenGeneral extends OptionsScreen<OverlayOptionsGeneral> {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.renderContents(guiGraphics, mouseX, mouseY, partialTick);
         widgetsList.onPostRender(guiGraphics, mouseX, mouseY, partialTick);
     }
 
@@ -58,8 +58,8 @@ public class OptionsScreenGeneral extends OptionsScreen<OverlayOptionsGeneral> {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    protected boolean onMouseScrolled(double mouseX, double mouseY, double delta) {
         widgetsList.mouseScrolled(mouseX, mouseY, delta);
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.onMouseScrolled(mouseX, mouseY, delta);
     }
 }

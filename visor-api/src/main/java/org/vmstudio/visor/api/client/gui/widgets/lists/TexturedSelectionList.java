@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets.lists;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import org.vmstudio.visor.api.VisorAPI;
@@ -14,7 +15,6 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
@@ -26,7 +26,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.vmstudio.visor.api.compatibility.mcversion.McSelectionList;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McSelectionList;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -209,7 +209,7 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
                     scrollBarWidth, thumbH
             );
         }
-        updateTooltip();
+        updateTooltip(guiGraphics, mouseX, mouseY);
         RenderSystem.disableBlend();
     }
 
@@ -229,7 +229,7 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
         }
     }
 
-    private void updateTooltip() {
+    private void updateTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         Function<String, Component> factory = widgetInfo.getTooltip();
         if (factory == null) return;
 
@@ -259,7 +259,11 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
 
         Screen screen = getAttachedTo();
         if (screen != null) {
-            screen.setTooltipForNextRenderPass(this.tooltip, DefaultTooltipPositioner.INSTANCE, false);
+            McGuiUtils.setTooltipForNextRenderPass(
+                    screen, guiGraphics,
+                    this.tooltip, DefaultTooltipPositioner.INSTANCE,
+                    mouseX, mouseY, false
+            );
         }
     }
 

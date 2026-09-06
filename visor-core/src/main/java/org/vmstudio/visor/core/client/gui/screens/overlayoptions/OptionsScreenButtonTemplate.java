@@ -664,7 +664,7 @@ public class OptionsScreenButtonTemplate extends OptionsScreen<OverlayOptionsBut
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    protected boolean onMouseScrolled(double mouseX, double mouseY, double delta) {
         if (page == Page.OVERLAYS && overlayList != null) {
             return overlayList.mouseScrolled(mouseX, mouseY, delta);
         }
@@ -674,7 +674,7 @@ public class OptionsScreenButtonTemplate extends OptionsScreen<OverlayOptionsBut
         if (page == Page.VR_ACTIONS && vrActionList != null) {
             return vrActionList.mouseScrolled(mouseX, mouseY, delta);
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.onMouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override

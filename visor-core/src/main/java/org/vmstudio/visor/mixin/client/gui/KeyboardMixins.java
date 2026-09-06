@@ -61,13 +61,13 @@ public class KeyboardMixins {
             var keyboardAccessor = ClientContext.overlayManager.getKeyboardAccessor();
             Screen attachedScreen = keyboardAccessor
                     .getAttachedTo();
-            if(attachedScreen instanceof VROverlayScreen
+            if(attachedScreen instanceof VROverlayScreen overlay
                     && keyboardAccessor.isVisible()){
                 if (actionType == 0) {
-                    attachedScreen.keyReleased(keyCode, keyScan, keyModifiers);
+                    overlay.keyReleased(keyCode, keyScan, keyModifiers);
                 } else {
                     //pressed - 1, heldDown - 2
-                    attachedScreen.keyPressed(keyCode, keyScan, keyModifiers);
+                    overlay.keyPressed(keyCode, keyScan, keyModifiers);
                 }
                 ci.cancel();
             }

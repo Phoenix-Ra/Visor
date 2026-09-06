@@ -6,7 +6,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class VRErrorReportScreen extends Screen {
+public class VRErrorReportScreen extends McScreen {
     private final String discordUrl;
     private final String logsFolderUrl;
 
@@ -79,9 +79,7 @@ public class VRErrorReportScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics gfx, int mx, int my, float pt) {
-        this.renderBackground(gfx);
-
+    protected void renderContents(@NotNull GuiGraphics gfx, int mx, int my, float pt) {
         gfx.drawCenteredString(this.font, this.title, this.width/2, 15, 0xFF5555);
 
         int y = 40;
@@ -92,7 +90,7 @@ public class VRErrorReportScreen extends Screen {
             y += this.font.lineHeight;
         }
 
-        super.render(gfx, mx, my, pt);
+        super.renderContents(gfx, mx, my, pt);
     }
 
     public static void catchError(Throwable t, boolean log) {

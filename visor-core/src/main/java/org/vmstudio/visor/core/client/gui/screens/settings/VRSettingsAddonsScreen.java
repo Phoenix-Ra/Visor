@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.Screen;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +17,7 @@ import java.util.List;
 
 import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
-public class VRSettingsAddonsScreen extends Screen {
+public class VRSettingsAddonsScreen extends McScreen {
 
     private final Screen previousScreen;
 
@@ -101,25 +102,23 @@ public class VRSettingsAddonsScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    protected boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == InputConstants.KEY_ESCAPE) {
             ClientContext.settingsManager.saveOptions();
             MC.setScreen(this.previousScreen);
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.onKeyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics);
-
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         this.list.renderBackground(guiGraphics);
         this.list.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
 
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        super.renderContents(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
 

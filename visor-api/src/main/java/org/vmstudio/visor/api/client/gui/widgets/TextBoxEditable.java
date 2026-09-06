@@ -24,6 +24,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 
 import java.util.ArrayList;
@@ -454,7 +455,7 @@ public class TextBoxEditable extends AbstractWidget {
     private void deleteText(int count) {
         if (readOnly) return;
 
-        if (Screen.hasControlDown()) {
+        if (McGuiUtils.hasControlDown()) {
             this.deleteWords(count);
         } else {
             this.deleteChars(count);
@@ -657,21 +658,21 @@ public class TextBoxEditable extends AbstractWidget {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!this.canConsumeInput()) return false;
 
-        this.shiftPressed = Screen.hasShiftDown();
+        this.shiftPressed = McGuiUtils.hasShiftDown();
 
-        if (Screen.isCopy(keyCode)) {
+        if (McGuiUtils.isCopy(keyCode)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlighted());
             return true;
-        } else if (Screen.isSelectAll(keyCode)) {
+        } else if (McGuiUtils.isSelectAll(keyCode)) {
             this.setSelectionAnchor(0);
             this.moveCursorToEnd();
             return true;
-        } else if (Screen.isPaste(keyCode)) {
+        } else if (McGuiUtils.isPaste(keyCode)) {
             if (!readOnly) {
                 this.insertText(Minecraft.getInstance().keyboardHandler.getClipboard());
             }
             return true;
-        } else if (Screen.isCut(keyCode)) {
+        } else if (McGuiUtils.isCut(keyCode)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlighted());
             if (!readOnly) {
                 this.insertText("");
@@ -722,7 +723,7 @@ public class TextBoxEditable extends AbstractWidget {
                 if (!readOnly) {
                     this.shiftPressed = false;
                     this.deleteText(-1);
-                    this.shiftPressed = Screen.hasShiftDown();
+                    this.shiftPressed = McGuiUtils.hasShiftDown();
                 }
                 return true;
             }
@@ -730,12 +731,12 @@ public class TextBoxEditable extends AbstractWidget {
                 if (!readOnly) {
                     this.shiftPressed = false;
                     this.deleteText(1);
-                    this.shiftPressed = Screen.hasShiftDown();
+                    this.shiftPressed = McGuiUtils.hasShiftDown();
                 }
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
-                if (Screen.hasControlDown()) {
+                if (McGuiUtils.hasControlDown()) {
                     this.moveCursorTo(this.getWordPosition(1));
                 } else {
                     this.moveCursor(1);
@@ -743,7 +744,7 @@ public class TextBoxEditable extends AbstractWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_LEFT -> {
-                if (Screen.hasControlDown()) {
+                if (McGuiUtils.hasControlDown()) {
                     this.moveCursorTo(this.getWordPosition(-1));
                 } else {
                     this.moveCursor(-1);
@@ -759,7 +760,7 @@ public class TextBoxEditable extends AbstractWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_HOME -> {
-                if (Screen.hasControlDown()) {
+                if (McGuiUtils.hasControlDown()) {
                     this.moveCursorToStart();
                 } else {
                     calculateLines();
@@ -770,7 +771,7 @@ public class TextBoxEditable extends AbstractWidget {
                 return true;
             }
             case GLFW.GLFW_KEY_END -> {
-                if (Screen.hasControlDown()) {
+                if (McGuiUtils.hasControlDown()) {
                     this.moveCursorToEnd();
                 } else {
                     calculateLines();
@@ -850,7 +851,7 @@ public class TextBoxEditable extends AbstractWidget {
         }
 
         // Focus the widget so wheel works; avoid selection change in read-only
-        this.shiftPressed = readOnly ? false : Screen.hasShiftDown();
+        this.shiftPressed = readOnly ? false : McGuiUtils.hasShiftDown();
         if (!readOnly && !this.shiftPressed) {
             this.setSelectionAnchor(this.cursorPos);
         }

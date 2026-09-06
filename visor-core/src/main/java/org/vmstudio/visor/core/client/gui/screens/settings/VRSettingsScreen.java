@@ -17,6 +17,7 @@ import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -28,7 +29,7 @@ import java.util.List;
 
 import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
-public class VRSettingsScreen extends Screen {
+public class VRSettingsScreen extends McScreen {
 
     public static AtumColor INACTIVE_COLOR = AtumColor.immutable(91,91,91,255);
     private static final ResourceLocation RESOURCE = McVersionUtils.newResourceLoc(
@@ -396,10 +397,14 @@ public class VRSettingsScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderScreenBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if(VisorState.get().isNotActive()) {
             guiGraphics.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
         }
+    }
+
+    @Override
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         BACKGROUND.blit(
                 guiGraphics,
                 startX,startY,
@@ -427,13 +432,8 @@ public class VRSettingsScreen extends Screen {
                 true
         );
         options.onPreRender(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.renderContents(guiGraphics, mouseX, mouseY, partialTick);
         options.onPostRender(guiGraphics, mouseX, mouseY, partialTick);
-
-    }
-
-    @Override
-    public void renderBackground(GuiGraphics guiGraphics) {
 
     }
 
@@ -605,8 +605,8 @@ public class VRSettingsScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean success = super.mouseClicked(mouseX, mouseY, button);
+    protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
+        boolean success = super.onMouseClicked(mouseX, mouseY, button);
         options.mouseClicked(mouseX, mouseY, button, success);
         if(!success && button == 0 && maxCategoryScroll() > 0){
             return handleCategoryScrollClick(mouseX, mouseY);
@@ -614,12 +614,12 @@ public class VRSettingsScreen extends Screen {
         return success;
     }
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    protected boolean onMouseScrolled(double mouseX, double mouseY, double delta) {
         if(isOverCategoryList(mouseX, mouseY) && maxCategoryScroll() > 0){
             scrollCategories(delta < 0 ? 1 : -1);
             return true;
         }
         options.mouseScrolled(mouseX, mouseY, delta);
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.onMouseScrolled(mouseX, mouseY, delta);
     }
 }
