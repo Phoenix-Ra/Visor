@@ -436,6 +436,11 @@ public enum VROptionWidgetType {
             "room_dismount_vehicle",
             (it) -> null
     ),
+    ROOM_BOAT_ROWING(
+            VROptionCategory.IMMERSION,
+            "room_boat_rowing",
+            (it) -> null
+    ),
     ROOM_CONSUME(
             VROptionCategory.IMMERSION,
             "room_consume",

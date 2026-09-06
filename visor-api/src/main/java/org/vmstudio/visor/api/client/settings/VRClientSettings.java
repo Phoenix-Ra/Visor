@@ -323,6 +323,10 @@ public class VRClientSettings {
     protected static boolean roomDismountVehicleEnabled = true;
 
     @Getter
+    @VROptionField(key = "room_boat_rowing", category = VROptionCategory.IMMERSION)
+    protected static boolean roomBoatRowingEnabled = true;
+
+    @Getter
     @VROptionField(key = "room_consume", category = VROptionCategory.IMMERSION)
     protected static boolean roomConsumeEnabled = true;
 

@@ -2,6 +2,7 @@ package org.vmstudio.visor.core.client.tasks.types.movement.vehicle;
 
 
 import lombok.Getter;
+import org.vmstudio.visor.api.client.settings.VRClientSettings;
 import org.vmstudio.visor.api.client.tasks.RegisterVisorTask;
 import org.vmstudio.visor.api.client.tasks.TaskType;
 import org.vmstudio.visor.api.client.tasks.VisorTask;
@@ -86,7 +87,7 @@ public class TaskBoat extends VisorTask {
 
     @Override
     public boolean isActive(LocalPlayer p) {
-        if (!isEnabled()) return false;
+        if (!VRClientSettings.isRoomBoatRowingEnabled()) return false;
         if (p == null || !p.isAlive()) return false;
         if (MC.gameMode == null) return false;
         if (Minecraft.getInstance().options.keyUp.isDown()) return false;

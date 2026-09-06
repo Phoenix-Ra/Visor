@@ -163,6 +163,8 @@
   "visor.options.immersion.room_swim.tooltip": "Плавайте, совершая движения руками.",
   "visor.options.immersion.room_dismount_vehicle": "Выход из транспорта",
   "visor.options.immersion.room_dismount_vehicle.tooltip": "Выход из транспорта, если вы отошли от него в VR-зоне.",
+  "visor.options.immersion.room_boat_rowing": "Гребля в лодке",
+  "visor.options.immersion.room_boat_rowing.tooltip": "Гребля в лодке руками",
   "visor.options.immersion.room_consume": "Поедание",
   "visor.options.immersion.room_consume.tooltip": "Чтобы съесть или выпить что-то, поднесите руку с предметом ко рту.",
   "_comment.immersion.advanced": "----Расширенные настройки погружения----",

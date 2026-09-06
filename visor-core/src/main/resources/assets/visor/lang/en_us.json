@@ -180,6 +180,8 @@
   "visor.options.immersion.room_swim.tooltip": "Swim with your hands",
   "visor.options.immersion.room_dismount_vehicle": "Dismount vehicle",
   "visor.options.immersion.room_dismount_vehicle.tooltip": "Dismount vehicle when moved away from the vehicle in VR room",
+  "visor.options.immersion.room_boat_rowing": "Boat Rowing",
+  "visor.options.immersion.room_boat_rowing.tooltip": "Boat Rowing with your hands",
   "visor.options.immersion.room_consume": "Consume",
   "visor.options.immersion.room_consume.tooltip": "Consume food/potions by moving hand, that holds consumable item, close to the head",
   "_comment.immersion.advanced": "----Immersion Advanced Settings----",
