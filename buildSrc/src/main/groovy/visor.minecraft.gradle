@@ -118,8 +118,13 @@ project.ext.resourcePlaceholders = [
 
 processResources {
     inputs.properties(resourcePlaceholders)
-    // NOT "*.mixins.json": mixin configs name inner classes with '$', which expand() would eat
     filesMatching(["fabric.mod.json", "META-INF/*.toml", "pack.mcmeta"]) {
         expand(resourcePlaceholders)
+    }
+
+    filesMatching(["*.mixins.json", "*.mixins.*.json"]) {
+        filter { String line ->
+            resourcePlaceholders.inject(line) { l, key, value -> l.replace('${' + key + '}', value.toString()) }
+        }
     }
 }
