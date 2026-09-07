@@ -21,7 +21,7 @@ jetbrains_annotations_version = "26.1.0"
 # ---- Version Targets --------------------------------------------------------------------------
 [targets]
 "1.20.1" = ["fabric", "forge"]
-"1.20.2" = ["fabric", "forge"]
+"1.20.2" = ["fabric", "forge", "neoforge"]
 
 # ---- Version dependencies ---------------------------------------------------------------------
 ["1.20.1"]
@@ -47,5 +47,7 @@ parchment_version = "2023.12.10"
 fabric_api_version = "0.91.6"
 forge_version = "48.1.0"
 forge_version_range = "[48,)"
+neoforge_version = "20.2.93"
+neoforge_version_range = "[20.2,)"
 sodium_version = "mc1.20.2-0.5.5"
 iris_version = "1.7.1+1.20.1"

@@ -1,0 +1,72 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+// Build script of every ":visor-neoforge:<mc>" subproject.
+plugins {
+    id "visor.loader"
+}
+
+// Atum Configuration for Dev Runtime on NeoForge
+configurations {
+    atumConfigRaw { canBeConsumed = false; canBeResolved = true; transitive = false }
+}
+dependencies {
+    atumConfigRaw "com.github.Phoenix-Ra.AtumConfiguration:atumconfig-core:${atumconfig_version}"
+}
+def devAtumConfigJar = tasks.register("devAtumConfigJar", ShadowJar) {
+    description = "Relocated AtumConfiguration for the NeoForge dev runtime"
+    configurations = [project.configurations.atumConfigRaw]
+    archiveBaseName = "atumconfig-dev"
+    archiveVersion = ""
+    archiveClassifier = ""
+    destinationDirectory = layout.buildDirectory.dir("dev-runtime")
+    ["com.google.gson": "gson", "org.yaml.snakeyaml": "snakeyaml", "com.google.errorprone": "errorprone"].each { pkg, alias ->
+        relocate pkg, "me.phoenixra.atumconfig.libs.${alias}"
+    }
+    exclude "META-INF/versions/**", "module-info.class"
+}
+//------
+
+dependencies {
+    neoForge "net.neoforged:neoforge:${neoforge_version}"
+
+    // We need it for @Environment annotation, to mark methods/classes
+    // NeoForge ignores this annotation, but addons will see
+    compileOnly("net.fabricmc:fabric-loader:${fabric_loader_version}") { transitive = false }
+
+    // NeoForge 20.2 ships Mixin 0.8.5, which has no @Inject(order = ..). The shared sources use it,
+    // so compile against the 0.8.7 annotations; the runtime simply ignores the extra attribute.
+    compileOnly("dev.architectury:mixin-patched:0.8.7.12") { transitive = false }
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
+
+    //Natives
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows") { transitive = false }
+    // vulkan bridge
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-vulkan:${lwjgl_version}") { transitive = false }
+
+    shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
+    shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
+    shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows") { transitive = false }
+    shadowBundle("org.lwjgl:lwjgl-vulkan:${lwjgl_version}") { transitive = false }
+
+    // Dev Runtime
+    forgeRuntimeLibrary(atumvr("api")) { transitive = false }
+    forgeRuntimeLibrary(atumvr("core")) { transitive = false }
+    forgeRuntimeLibrary files(devAtumConfigJar)
+}
+
+loom {
+    neoForge {
+         convertAccessWideners(tasks.named("remapJar", net.fabricmc.loom.task.RemapJarTask),
+                loom.accessWidenerPath.get().asFile.name)
+    }
+}
+
+// NeoForge 1.20.5+ reads META-INF/neoforge.mods.toml -> 1.20.4 and older read META-INF/mods.toml
+if (stonecutter.eval(minecraft_version, "<1.20.5")) {
+    [tasks.named("processResources"), tasks.named("processApiResources")].each { t ->
+        t.configure { filesMatching("META-INF/neoforge.mods.toml") { name = "mods.toml" } }
+    }
+}

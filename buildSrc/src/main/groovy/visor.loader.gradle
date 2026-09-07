@@ -72,7 +72,8 @@ shadowJar {
     ]
     relocations.each { original, alias -> relocate original, "${mod_group}.${mod_id}.libs.${alias}" }
 
-    exclude "META-INF/maven/**", "META-INF/versions/**", "META-INF/proguard/**", "module-info.class"
+    // NEVER exclude META-INF/versions/**: Forge and Neoforge need it
+    exclude "META-INF/maven/**", "META-INF/proguard/**", "module-info.class"
 }
 
 remapJar {

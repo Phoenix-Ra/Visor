@@ -36,6 +36,7 @@ repositories {
     maven { name = "Fabric"; url = "https://maven.fabricmc.net/" }
     maven { name = "Architectury"; url = "https://maven.architectury.dev/" }
     maven { name = "Forge"; url = "https://maven.minecraftforge.net/" }
+    maven { name = "NeoForge"; url = "https://maven.neoforged.net/releases/" }
     maven { name = "Mojang"; url = "https://libraries.minecraft.net/" }
     maven { name = "Parchment"; url = "https://maven.parchmentmc.org" }
     maven { name = "JitPack"; url = "https://jitpack.io" }

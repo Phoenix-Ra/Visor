@@ -153,7 +153,8 @@ public interface ModLoader {
 
     enum LoaderType{
         FABRIC,
-        FORGE
+        FORGE,
+        NEOFORGE
     }
 
     @ApiStatus.Internal
@@ -174,6 +175,14 @@ public interface ModLoader {
                 Class<?> clazz = Class.forName("org.vmstudio.visor.loader.forge.ForgeModLoader");
                 api = (ModLoader) clazz.getConstructor().newInstance();
             } catch (Exception ignored) {
+            }
+            //NEOFORGE
+            if(api == null){
+                try {
+                    Class<?> clazz = Class.forName("org.vmstudio.visor.loader.neoforge.NeoForgeModLoader");
+                    api = (ModLoader) clazz.getConstructor().newInstance();
+                } catch (Exception ignored) {
+                }
             }
             //FABRIC
             if(api == null){

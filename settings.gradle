@@ -42,9 +42,10 @@ stonecutter {
         // Mod Loader branches
         branch("visor-fabric") { versions(versionsFor("fabric")) }
         branch("visor-forge")  { versions(versionsFor("forge")) }
+        branch("visor-neoforge") { versions(versionsFor("neoforge")) }
 
         // Main version, should be used for git commits
-        vcsVersion = "1.20.1"
+        vcsVersion = "1.20.2"
     }
 }
 
