@@ -8,6 +8,7 @@ import org.vmstudio.visor.core.client.ClientContext;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McObjectSelectionList;
 import net.minecraft.client.gui.screens.Screen;
 import org.vmstudio.visor.api.compatibility.mcversion.gui.McScreen;
 import net.minecraft.network.chat.Component;
@@ -36,8 +37,8 @@ public class VRSettingsAddonsScreen extends McScreen {
         List<VisorAddon> addons = ClientContext.addonManager.getAddons().stream().toList();
 
         this.list = new AddonList(
-                this.width, this.height,
-                32, this.height - 32, 24
+                this.width, this.height - 64,
+                32, 24
         );
 
         int rowWidth = this.list.getRowWidth();
@@ -122,9 +123,9 @@ public class VRSettingsAddonsScreen extends McScreen {
     }
 
 
-    private static class AddonList extends ObjectSelectionList<AddonEntry> {
-        public AddonList(int width, int height, int top, int bottom, int itemHeight) {
-            super(MC, width, height, top, bottom, itemHeight);
+    private static class AddonList extends McObjectSelectionList<AddonEntry> {
+        public AddonList(int width, int height, int top, int itemHeight) {
+            super(MC, width, height, 0, top, itemHeight);
         }
 
         @Override
@@ -137,15 +138,14 @@ public class VRSettingsAddonsScreen extends McScreen {
             return Math.min(300, this.width - 50);
         }
 
-        // vanilla stopped calling renderBackground on lists in 1.20.2, so draw it here instead
         @Override
-        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             guiGraphics.fill(
-                    this.x0, this.y0,
-                    this.x1, this.y1,
+                    listLeft(), listTop(),
+                    listRight(), listBottom(),
                     AtumColor.BLACK.withAlpha(0.5f).asInt()
             );
-            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            renderDefault(guiGraphics, mouseX, mouseY, partialTick);
         }
     }
 

@@ -94,8 +94,8 @@ public class CheckboxList extends McSelectionList<CheckboxList.CheckboxEntry> {
 
         int maxScroll = this.getMaxScroll();
         if (maxScroll > 0) {
-            int trackTop = this.y0 + this.paddingTop;
-            int trackBottom = this.y1 - this.paddingTop;
+            int trackTop = listTop() + this.paddingTop;
+            int trackBottom = listBottom() - this.paddingTop;
             int viewH = trackBottom - trackTop;
 
             int thumbH = (int)(viewH * (float)viewH / ((float)viewH + maxScroll));
@@ -126,7 +126,7 @@ public class CheckboxList extends McSelectionList<CheckboxList.CheckboxEntry> {
         for(int m = 0; m < l; ++m) {
             int n = this.getRowTop(m);
             int o = this.getRowBottom(m);
-            if (o >= this.y0 && n <= this.y1) {
+            if (o >= listTop() && n <= listBottom()) {
                 this.renderItem(guiGraphics, mouseX, mouseY, partialTick, m, i, n, j, k);
             }
         }
@@ -248,10 +248,10 @@ public class CheckboxList extends McSelectionList<CheckboxList.CheckboxEntry> {
     @Override
     protected @Nullable CheckboxEntry getEntryAtPosition(double mouseX, double mouseY) {
         int i = this.getRowWidth() / 2;
-        int j = this.x0 + this.width / 2;
+        int j = listLeft() + this.width / 2;
         int k = j - i;
         int l = j + i;
-        int m = Mth.floor(mouseY - (double)this.y0) - this.headerHeight + (int)this.getScrollAmount() - 4;
+        int m = Mth.floor(mouseY - (double)listTop()) - this.headerHeight + (int)this.getScrollAmount() - 4;
         int n = m / this.itemHeight;
         var entry = mouseX < (double)this.getScrollbarPosition()
                 && mouseX >= (double)k
@@ -296,7 +296,7 @@ public class CheckboxList extends McSelectionList<CheckboxList.CheckboxEntry> {
 
     @Override
     protected int scrollbarX() {
-        return this.x0 + this.width
+        return listLeft() + this.width
                 - (scrollBarWidth + 2)  - paddingCheckbox;
     }
 
@@ -309,12 +309,12 @@ public class CheckboxList extends McSelectionList<CheckboxList.CheckboxEntry> {
 
     @Override
     public int getRowLeft() {
-        return this.x0 + paddingLeft;
+        return listLeft() + paddingLeft;
     }
 
     @Override
     protected int getRowTop(int index) {
-        return this.y0 + paddingTop - (int)this.getScrollAmount() + index * this.itemHeight + this.headerHeight;
+        return listTop() + paddingTop - (int)this.getScrollAmount() + index * this.itemHeight + this.headerHeight;
     }
 
     @Override
@@ -323,7 +323,7 @@ public class CheckboxList extends McSelectionList<CheckboxList.CheckboxEntry> {
     }
 
     @Override
-    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    protected void updateListNarration(@NotNull NarrationElementOutput narrationElementOutput) {
 
     }
 

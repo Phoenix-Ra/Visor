@@ -190,8 +190,8 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
         int scrollX = this.getScrollbarPosition();
         int maxScroll = this.getMaxScroll();
         if (maxScroll > 0) {
-            int trackTop = this.y0 + this.paddingTop;
-            int trackBottom = this.y1 - this.paddingTop;
+            int trackTop = listTop() + this.paddingTop;
+            int trackBottom = listBottom() - this.paddingTop;
             int viewH = trackBottom - trackTop;
 
             int thumbH = (int) (viewH * (float) viewH / ((float) viewH + maxScroll));
@@ -223,7 +223,7 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
         for (int m = 0; m < l; ++m) {
             int n = this.getRowTop(m);
             int o = this.getRowBottom(m);
-            if (o >= this.y0 && n <= this.y1) {
+            if (o >= listTop() && n <= listBottom()) {
                 this.renderItem(guiGraphics, mouseX, mouseY, partialTick, m, i, n, j, k);
             }
         }
@@ -426,7 +426,7 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
 
     @Override
     protected int scrollbarX() {
-        return this.x0 + this.width - (scrollBarWidth + 2);
+        return listLeft() + this.width - (scrollBarWidth + 2);
     }
 
     @Override
@@ -436,12 +436,12 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
 
     @Override
     public int getRowLeft() {
-        return this.x0 + paddingLeft;
+        return listLeft() + paddingLeft;
     }
 
     @Override
     protected int getRowTop(int index) {
-        return this.y0 + paddingTop - (int) this.getScrollAmount() + index * this.itemHeight + this.headerHeight;
+        return listTop() + paddingTop - (int) this.getScrollAmount() + index * this.itemHeight + this.headerHeight;
     }
 
     @Override
@@ -450,7 +450,7 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
     }
 
     @Override
-    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    protected void updateListNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     // ══════════════════════════════════════════════════════════════════

@@ -16,7 +16,7 @@
     "client.gui.KeyboardMixins$EditBoxMixin",
     "client.gui.KeyboardMixins$InputConstantsMixin",
     "client.gui.KeyboardMixins$KeyboardHandlerMixin",
-    "client.gui.TooltipMixin",
+    "client.gui.TooltipMixins$TooltipScreenMixin",
     "client.gui.TutorialToastMixin",
     "client.gui.WinScreenMixin",
     "client.gui.screen.ChatScreenMixin",

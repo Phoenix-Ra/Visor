@@ -8,6 +8,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,9 +27,16 @@ public abstract class AbstractArrowMixin extends Entity {
     @Shadow
     private double baseDamage;
 
-    @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;)V")
+    // 1.20.3 gave every arrow constructor the pickup ItemStack
+    //? if >=1.20.3 {
+    @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;)V")
+    public void visor$setupPos(EntityType<? extends AbstractArrow> entityType, LivingEntity shooter, Level level, ItemStack pickupItem, CallbackInfo ci
+    ) {
+    //?} else {
+    /*@Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;)V")
     public void visor$setupPos(EntityType<? extends AbstractArrow> entityType, LivingEntity shooter, Level level, CallbackInfo ci
     ) {
+    *///?}
         if (!(shooter instanceof ServerPlayer player)) {
            return;
         }

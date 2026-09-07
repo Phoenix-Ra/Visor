@@ -7,7 +7,7 @@ import org.vmstudio.visor.api.client.gui.widgets.info.WidgetInfoButtonImaged;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractButton;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-public class ButtonImaged extends AbstractButton {
+public class ButtonImaged extends McButton {
 
     @Getter
     private final WidgetInfoButtonImaged widgetInfo;
@@ -89,20 +89,15 @@ public class ButtonImaged extends AbstractButton {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        if (tooltipOverride == null && getTooltip() != widgetInfo.getTooltip()) {
-            super.setTooltip(widgetInfo.getTooltip());
-        }
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    @Override
-    protected @NotNull ClientTooltipPositioner createTooltipPositioner() {
+    protected @NotNull ClientTooltipPositioner tooltipPositioner() {
         return ClampedTooltipPositioner.INSTANCE;
     }
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (tooltipOverride == null && getTooltip() != widgetInfo.getTooltip()) {
+            super.setTooltip(widgetInfo.getTooltip());
+        }
 
         GuiTexture texture;
         if(!active){

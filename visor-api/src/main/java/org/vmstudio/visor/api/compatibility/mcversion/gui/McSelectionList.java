@@ -22,7 +22,16 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
                               int width, int height,
                               int x, int y,
                               int itemHeight) {
+        //? if >=1.20.3 {
         super(Minecraft.getInstance(),
+                width,
+                height,
+                y,
+                itemHeight
+        );
+        this.setX(x);
+        //?} else {
+        /*super(Minecraft.getInstance(),
                 width,
                 height,
                 y,
@@ -30,6 +39,7 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
                 itemHeight
         );
         this.setLeftPos(x);
+        *///?}
     }
 
 
@@ -76,27 +86,50 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
 
 
     protected final int listLeft() {
-        return x0;
+        //? if >=1.20.3 {
+        return getX();
+        //?} else {
+        /*return x0;
+        *///?}
     }
     protected final int listRight() {
-        return x1;
+        //? if >=1.20.3 {
+        return getRight();
+        //?} else {
+        /*return x1;
+        *///?}
     }
 
     protected final int listTop() {
-        return y0;
+        //? if >=1.20.3 {
+        return getY();
+        //?} else {
+        /*return y0;
+        *///?}
     }
     protected final int listBottom() {
-        return y1;
+        //? if >=1.20.3 {
+        return getBottom();
+        //?} else {
+        /*return y1;
+        *///?}
     }
 
 
 
     // ------- MC-VERSION SPECIFIC IMPLEMENTATION -------
 
+    //? if >=1.20.3 {
     @Override
+    public final void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        renderContents(guiGraphics, mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
     public final void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderContents(guiGraphics, mouseX, mouseY, partialTick);
     }
+    *///?}
 
     @Override
     protected final void renderList(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -109,10 +142,17 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
     }
     *///?}
 
+    //? if >=1.20.3 {
     @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        updateListNarration(narrationElementOutput);
+    }
+    //?} else {
+    /*@Override
     public void updateNarration(NarrationElementOutput narrationElementOutput) {
         updateListNarration(narrationElementOutput);
     }
+    *///?}
 
 
     @Override

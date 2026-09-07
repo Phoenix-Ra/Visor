@@ -5,8 +5,10 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.netty.buffer.Unpooled;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.NetworkRegistry;
+//? if <1.20.4 {
+/*import net.neoforged.neoforge.network.NetworkRegistry;
 import net.neoforged.neoforge.network.event.EventNetworkChannel;
+*///?}
 import org.vmstudio.visor.api.ModLoader;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.visor.api.client.render.RenderPipelineCallback;
@@ -33,8 +35,18 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.fml.loading.moddiscovery.ModFileInfo;
 import net.neoforged.neoforgespi.language.IModFileInfo;
 import net.neoforged.neoforgespi.language.ModFileScanData;
-import net.neoforged.neoforge.network.INetworkDirection;
+//? if >=1.20.4 {
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
+import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+//?} else {
+/*import net.neoforged.neoforge.network.INetworkDirection;
 import net.neoforged.neoforge.network.PlayNetworkDirection;
+*///?}
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -50,6 +62,10 @@ public class NeoForgeModLoader implements ModLoader {
             = new EnumMap<>(RenderPipelineStage.class);
 
     private boolean levelStageListenerRegistered = false;
+
+    //? if >=1.20.4 {
+    private final List<VisorChannel> pendingChannels = new CopyOnWriteArrayList<>();
+    //?}
 
 
     @Override
@@ -161,7 +177,10 @@ public class NeoForgeModLoader implements ModLoader {
 
     @Override
     public void registerNetworkChannel(@NotNull VisorChannel channel) {
-        String version = String.valueOf(channel.getNetworkVersion());
+        //? if >=1.20.4 {
+        pendingChannels.add(channel);
+        //?} else {
+        /*String version = String.valueOf(channel.getNetworkVersion());
         EventNetworkChannel eventChannel = NetworkRegistry.ChannelBuilder
                 .named(channel.getChannelId())
                 .clientAcceptedVersions(s -> true)
@@ -192,6 +211,7 @@ public class NeoForgeModLoader implements ModLoader {
             }
             context.setPacketHandled(true);
         });
+        *///?}
     }
 
     @Override
@@ -199,8 +219,12 @@ public class NeoForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToClient payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        return PlayNetworkDirection.PLAY_TO_CLIENT.buildPacket(
+        //? if >=1.20.4 {
+        return new ClientboundCustomPayloadPacket(new RawPayload(channelId, buffer));
+        //?} else {
+        /*return PlayNetworkDirection.PLAY_TO_CLIENT.buildPacket(
                 new INetworkDirection.PacketData(buffer, 0), channelId);
+        *///?}
     }
 
     @Override
@@ -208,8 +232,12 @@ public class NeoForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToServer payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        return PlayNetworkDirection.PLAY_TO_SERVER.buildPacket(
+        //? if >=1.20.4 {
+        return new ServerboundCustomPayloadPacket(new RawPayload(channelId, buffer));
+        //?} else {
+        /*return PlayNetworkDirection.PLAY_TO_SERVER.buildPacket(
                 new INetworkDirection.PacketData(buffer, 0), channelId);
+        *///?}
     }
 
     @Override
@@ -228,6 +256,60 @@ public class NeoForgeModLoader implements ModLoader {
 
 
     // ----- INNER -----
+
+    //? if >=1.20.4 {
+    void registerPayloads(@NotNull RegisterPayloadHandlerEvent event) {
+        for (VisorChannel channel : pendingChannels) {
+            ResourceLocation channelId = channel.getChannelId();
+            event.registrar(channelId.getNamespace())
+                    .optional()
+                    .play(channelId,
+                            buffer -> RawPayload.read(channelId, buffer),
+                            (payload, context) -> handlePayload(channel, payload, context));
+        }
+        pendingChannels.clear();
+    }
+
+    private static void handlePayload(VisorChannel channel,
+                                      RawPayload payload,
+                                      PlayPayloadContext context) {
+        FriendlyByteBuf buffer = payload.buffer();
+        if (context.flow() == PacketFlow.SERVERBOUND) {
+            if (channel.hasPacketsToServer()
+                    && context.player().orElse(null) instanceof ServerPlayer sender) {
+                context.workHandler().execute(() -> channel.handleToServer(buffer, sender,
+                        p -> context.replyHandler().send(
+                                RawPayload.of(channel.getChannelId(), p))));
+            }
+        } else {
+            if (channel.hasPacketsToClient()) {
+                context.workHandler().execute(() -> channel.handleToClient(buffer));
+            }
+        }
+    }
+
+
+    private record RawPayload(ResourceLocation id, FriendlyByteBuf buffer)
+            implements CustomPacketPayload {
+
+        private static RawPayload read(ResourceLocation id, FriendlyByteBuf source) {
+            FriendlyByteBuf copy = new FriendlyByteBuf(Unpooled.buffer());
+            copy.writeBytes(source, source.readableBytes());
+            return new RawPayload(id, copy);
+        }
+
+        private static RawPayload of(ResourceLocation id, VisorPayloadToClient payload) {
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+            payload.write(buffer);
+            return new RawPayload(id, buffer);
+        }
+
+        @Override
+        public void write(@NotNull FriendlyByteBuf target) {
+            target.writeBytes(buffer.slice());
+        }
+    }
+    //?}
 
     private void onRenderLevelStage(RenderLevelStageEvent event) {
         RenderPipelineStage stage = mapForgeStage(event.getStage());

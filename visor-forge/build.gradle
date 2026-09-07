@@ -24,7 +24,41 @@ def devAtumConfigJar = tasks.register("devAtumConfigJar", ShadowJar) {
     }
     exclude "META-INF/versions/**", "module-info.class"
 }
+// LWJGL for the Forge dev runtime
+configurations {
+    lwjglRaw { canBeConsumed = false; canBeResolved = true; transitive = false }
+}
+dependencies {
+    lwjglRaw "org.lwjgl:lwjgl-openxr:${lwjgl_version}"
+    lwjglRaw "org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux"
+    lwjglRaw "org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows"
+    lwjglRaw "org.lwjgl:lwjgl-vulkan:${lwjgl_version}"
+}
+def devNativesJar = tasks.register("devNativesJar", Jar) {
+    description = "LWJGL OpenXR and Vulkan without module-info, for the Forge dev runtime"
+    archiveBaseName = "lwjgl-visor-dev"
+    archiveVersion = ""
+    archiveClassifier = ""
+    destinationDirectory = layout.buildDirectory.dir("dev-runtime")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.lwjglRaw.collect { zipTree(it) } }
+    // LWJGL keeps its only module descriptor under META-INF/versions/11, so the whole
+    // directory goes - and with it the Multi-Release manifests, or securejarhandler would
+    // look for a path that is no longer there.
+    exclude "META-INF/versions/**", "META-INF/MANIFEST.MF",
+            "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA"
+}
 //------
+
+//excluding unnecessary stuff for Dev runtime
+configurations.runtimeClasspath {
+    exclude group: "com.github.Phoenix-Ra", module: "AtumConfiguration"
+    exclude group: "com.github.Phoenix-Ra.AtumConfiguration"
+
+    exclude group: "com.github.Phoenix-Ra.AtumVR"
+    exclude module: "atumvr-api-${atumvr_version}"
+    exclude module: "atumvr-core-${atumvr_version}"
+}
 
 dependencies {
     forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
@@ -41,11 +75,7 @@ dependencies {
     implementation(include("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}"))
 
     //Natives
-    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
-    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
-    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows") { transitive = false }
-    // vulkan bridge
-    forgeRuntimeLibrary("org.lwjgl:lwjgl-vulkan:${lwjgl_version}") { transitive = false }
+    forgeRuntimeLibrary files(devNativesJar)
 
     shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
     shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
