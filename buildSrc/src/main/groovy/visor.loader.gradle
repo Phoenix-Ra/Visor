@@ -122,6 +122,9 @@ publishing {
 
 // ---- Running --------------------------------------------------------------------------------
 loom {
+    mods {
+        create(mod_id) { sourceSet sourceSets.main }
+    }
     runs {
         configureEach {
             preferGradleTask = true

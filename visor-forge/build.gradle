@@ -1,7 +1,30 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 // Build script of every ":visor-forge:<mc>" subproject.
 plugins {
     id "visor.loader"
 }
+
+// Atum Configuration for Dev Runtime on Forge
+configurations {
+    atumConfigRaw { canBeConsumed = false; canBeResolved = true; transitive = false }
+}
+dependencies {
+    atumConfigRaw "com.github.Phoenix-Ra.AtumConfiguration:atumconfig-core:${atumconfig_version}"
+}
+def devAtumConfigJar = tasks.register("devAtumConfigJar", ShadowJar) {
+    description = "Relocated AtumConfiguration for the Forge dev runtime"
+    configurations = [project.configurations.atumConfigRaw]
+    archiveBaseName = "atumconfig-dev"
+    archiveVersion = ""
+    archiveClassifier = ""
+    destinationDirectory = layout.buildDirectory.dir("dev-runtime")
+    ["com.google.gson": "gson", "org.yaml.snakeyaml": "snakeyaml", "com.google.errorprone": "errorprone"].each { pkg, alias ->
+        relocate pkg, "me.phoenixra.atumconfig.libs.${alias}"
+    }
+    exclude "META-INF/versions/**", "module-info.class"
+}
+//------
 
 dependencies {
     forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
@@ -18,16 +41,21 @@ dependencies {
     implementation(include("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}"))
 
     //Natives
-    forgeRuntimeLibrary "org.lwjgl:lwjgl-openxr:${lwjgl_version}"
-    forgeRuntimeLibrary "org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux"
-    forgeRuntimeLibrary "org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows"
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows") { transitive = false }
     // vulkan bridge
-    forgeRuntimeLibrary "org.lwjgl:lwjgl-vulkan:${lwjgl_version}"
+    forgeRuntimeLibrary("org.lwjgl:lwjgl-vulkan:${lwjgl_version}") { transitive = false }
 
     shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
     shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
     shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows") { transitive = false }
     shadowBundle("org.lwjgl:lwjgl-vulkan:${lwjgl_version}") { transitive = false }
+
+    // Dev Runtime
+    forgeRuntimeLibrary(atumvr("api")) { transitive = false }
+    forgeRuntimeLibrary(atumvr("core")) { transitive = false }
+    forgeRuntimeLibrary files(devAtumConfigJar)
 }
 
 loom {
