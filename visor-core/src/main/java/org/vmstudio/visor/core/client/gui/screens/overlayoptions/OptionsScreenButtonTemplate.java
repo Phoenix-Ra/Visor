@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.screens.overlayoptions;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
 import org.vmstudio.visor.api.client.gui.overlays.VROverlay;
 import org.vmstudio.visor.api.client.gui.overlays.options.OptionsScreen;
@@ -666,13 +667,13 @@ public class OptionsScreenButtonTemplate extends OptionsScreen<OverlayOptionsBut
     @Override
     protected boolean onMouseScrolled(double mouseX, double mouseY, double delta) {
         if (page == Page.OVERLAYS && overlayList != null) {
-            return overlayList.mouseScrolled(mouseX, mouseY, delta);
+            return McGuiUtils.mouseScrolled(overlayList, mouseX, mouseY, delta);
         }
         if (page == Page.VR_ACTION_SETS && actionSetList != null) {
-            return actionSetList.mouseScrolled(mouseX, mouseY, delta);
+            return McGuiUtils.mouseScrolled(actionSetList, mouseX, mouseY, delta);
         }
         if (page == Page.VR_ACTIONS && vrActionList != null) {
-            return vrActionList.mouseScrolled(mouseX, mouseY, delta);
+            return McGuiUtils.mouseScrolled(vrActionList, mouseX, mouseY, delta);
         }
         return super.onMouseScrolled(mouseX, mouseY, delta);
     }

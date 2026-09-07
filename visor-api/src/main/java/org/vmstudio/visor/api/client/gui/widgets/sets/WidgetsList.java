@@ -1,5 +1,7 @@
 package org.vmstudio.visor.api.client.gui.widgets.sets;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiEventListener;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.vmstudio.visor.api.client.gui.GuiTexture;
@@ -96,7 +98,7 @@ public class WidgetsList extends DynamicWidgetSet {
     public void onTick() {
         for (var widget : widgets) {
             if (widget instanceof EditBox editBox) {
-                editBox.tick();
+                McGuiUtils.tickEditBox(editBox);
             }
         }
     }
@@ -235,7 +237,7 @@ public class WidgetsList extends DynamicWidgetSet {
     }
 
 
-    private class Scrollbar extends AbstractWidget {
+    private class Scrollbar extends AbstractWidget implements McGuiEventListener {
 
         private boolean dragging = false;
 

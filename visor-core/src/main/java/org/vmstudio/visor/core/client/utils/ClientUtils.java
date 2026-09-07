@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.utils;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.realmsclient.RealmsMainScreen;
 import net.minecraft.client.KeyMapping;
@@ -121,15 +122,16 @@ public class ClientUtils {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) return;
         boolean bl = minecraft.isLocalServer();
-        boolean bl2 = minecraft.isConnectedToRealms();
+        boolean bl2 = McVersionClientUtils.isConnectedToRealms(minecraft);
         var connection = minecraft.getConnection();
         if(connection != null){
             connection.getConnection().disconnect(Component.literal(message));
         }
         if (bl) {
-            minecraft.clearLevel(new GenericDirtMessageScreen(Component.translatable("visor.messages.saving_world", message)));
+            McVersionClientUtils.clearLevel(minecraft,
+                    new GenericDirtMessageScreen(Component.translatable("visor.messages.saving_world", message)));
         } else {
-            minecraft.clearLevel();
+            McVersionClientUtils.clearLevel(minecraft);
         }
 
         TitleScreen titleScreen = new TitleScreen();

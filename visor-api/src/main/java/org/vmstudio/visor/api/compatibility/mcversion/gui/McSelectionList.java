@@ -51,7 +51,23 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
     }
 
     protected boolean onMouseScrolled(double mouseX, double mouseY, double verticalAmount) {
-        return super.mouseScrolled(mouseX, mouseY, verticalAmount);
+        //? if >=1.20.2 {
+        return super.mouseScrolled(mouseX, mouseY, 0, verticalAmount);
+        //?} else {
+        /*return super.mouseScrolled(mouseX, mouseY, verticalAmount);
+        *///?}
+    }
+
+    public void setRenderTopAndBottom(boolean render) {
+        //? if <1.20.2 {
+        /*super.setRenderTopAndBottom(render);
+        *///?}
+    }
+
+    public void setRenderSelection(boolean render) {
+        //? if <1.20.2 {
+        /*super.setRenderSelection(render);
+        *///?}
     }
 
     protected void updateListNarration(NarrationElementOutput narrationElementOutput) {
@@ -87,9 +103,11 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
         renderRows(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    @Override
+    //? if <1.20.2 {
+    /*@Override
     protected void renderBackground(GuiGraphics guiGraphics) {
     }
+    *///?}
 
     @Override
     public void updateNarration(NarrationElementOutput narrationElementOutput) {
@@ -102,10 +120,18 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
         return scrollbarX();
     }
 
+    //? if >=1.20.2 {
     @Override
-    public final boolean mouseScrolled(double mouseX, double mouseY,  double scrollY) {
+    public final boolean mouseScrolled(double mouseX, double mouseY,
+                                       double scrollX, double scrollY) {
         return onMouseScrolled(mouseX, mouseY, scrollY);
     }
+    //?} else {
+    /*@Override
+    public final boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
+        return onMouseScrolled(mouseX, mouseY, scrollY);
+    }
+    *///?}
 
 
 }

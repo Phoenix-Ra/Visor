@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.overlays.options.types.properties;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import me.phoenixra.atumconfig.api.config.Config;
 import org.vmstudio.visor.api.client.gui.widgets.EditBoxImaged;
 import org.vmstudio.visor.api.client.gui.widgets.info.WidgetInfoEditBox;
@@ -80,7 +81,7 @@ public class PropertyFloat extends Property<Float> {
         int maxLen = intPartWidth + 1 /* '.' */ + 8 /* decimals */ + (minValue < 0 ? 1 : 0);
         widget.setMaxLength(Math.max(maxLen, 6));
 
-        widget.moveCursorToStart();
+        McGuiUtils.moveCursorToStart(widget);
 
         return widget;
     }

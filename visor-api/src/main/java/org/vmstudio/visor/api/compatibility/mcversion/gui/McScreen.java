@@ -33,10 +33,10 @@ public abstract class McScreen extends Screen {
                                           int mouseX, int mouseY,
                                           float partialTick) {
         //? if >=1.20.2 {
-        /*super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        *///?} else {
-        super.renderBackground(guiGraphics);
-        //?}
+        super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        //?} else {
+        /*super.renderBackground(guiGraphics);
+        *///?}
     }
 
     protected void renderContents(GuiGraphics guiGraphics,
@@ -72,10 +72,10 @@ public abstract class McScreen extends Screen {
 
     protected boolean onMouseScrolled(double mouseX, double mouseY, double verticalAmount) {
         //? if >=1.20.2 {
-        /*return super.mouseScrolled(mouseX, mouseY, 0, verticalAmount);
-        *///?} else {
-        return super.mouseScrolled(mouseX, mouseY, verticalAmount);
-        //?}
+        return super.mouseScrolled(mouseX, mouseY, 0, verticalAmount);
+        //?} else {
+        /*return super.mouseScrolled(mouseX, mouseY, verticalAmount);
+        *///?}
     }
 
     protected boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
@@ -139,48 +139,48 @@ public abstract class McScreen extends Screen {
     //?}
 
     //? if <1.20.2 {
-    @Override
+    /*@Override
     public boolean mouseScrolled(double mouseX, double mouseY, double verticalAmount) {
         return onMouseScrolled(mouseX, mouseY, verticalAmount);
     }
-    //?}
+    *///?}
 
     //? if >=1.20.2 && <1.21.9 {
-    /*// vanilla render() draws the background itself there, but the adapter already did
+    // vanilla render() draws the background itself there, but the adapter already did
     private boolean contentsPass;
-    *///?}
+    //?}
 
     @Override
     public final void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         //? if <1.20.2 {
-        renderScreenBackground(guiGraphics, mouseX, mouseY, partialTick);
-        renderContents(guiGraphics, mouseX, mouseY, partialTick);
-        //?} elif <1.21.9 {
         /*renderScreenBackground(guiGraphics, mouseX, mouseY, partialTick);
+        renderContents(guiGraphics, mouseX, mouseY, partialTick);
+        *///?} elif <1.21.9 {
+        renderScreenBackground(guiGraphics, mouseX, mouseY, partialTick);
         contentsPass = true;
         try {
             renderContents(guiGraphics, mouseX, mouseY, partialTick);
         } finally {
             contentsPass = false;
         }
-        *///?} else {
+        //?} else {
         /*renderContents(guiGraphics, mouseX, mouseY, partialTick);
         *///?}
     }
 
     //? if <1.20.2 {
-    @Override
+    /*@Override
     public final void renderBackground(GuiGraphics guiGraphics) {
         renderScreenBackground(guiGraphics, 0, 0, 0);
     }
-    //?} elif <1.21.9 {
-    /*@Override
+    *///?} elif <1.21.9 {
+    @Override
     public final void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (!contentsPass) {
             renderScreenBackground(guiGraphics, mouseX, mouseY, partialTick);
         }
     }
-    *///?} else {
+    //?} else {
     /*@Override
     public final void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderScreenBackground(guiGraphics, mouseX, mouseY, partialTick);
@@ -188,11 +188,11 @@ public abstract class McScreen extends Screen {
     *///?}
 
     //? if >=1.20.2 {
-    /*@Override
+    @Override
     public final boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         return onMouseScrolled(mouseX, mouseY, scrollY);
     }
-    *///?}
+    //?}
 
     //? if >=1.21.9 {
     /*@Override

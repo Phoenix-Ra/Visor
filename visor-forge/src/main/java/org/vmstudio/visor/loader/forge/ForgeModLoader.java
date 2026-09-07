@@ -5,8 +5,13 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.netty.buffer.Unpooled;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkRegistry;
+//? if >=1.20.2 {
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.EventNetworkChannel;
+//?} else {
+/*import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.event.EventNetworkChannel;
+*///?}
 import org.vmstudio.visor.api.ModLoader;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.visor.api.client.render.RenderPipelineCallback;
@@ -34,7 +39,9 @@ import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import net.minecraftforge.network.NetworkDirection;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+//? if <1.20.2 {
+/*import org.apache.commons.lang3.tuple.ImmutablePair;
+*///?}
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -160,7 +167,39 @@ public class ForgeModLoader implements ModLoader {
 
     @Override
     public void registerNetworkChannel(@NotNull VisorChannel channel) {
-        String version = String.valueOf(channel.getNetworkVersion());
+        //? if >=1.20.2 {
+        EventNetworkChannel eventChannel = ChannelBuilder
+                .named(channel.getChannelId())
+                .clientAcceptedVersions((status, version) -> true)
+                .serverAcceptedVersions((status, version) -> true)
+                .networkProtocolVersion(channel.getNetworkVersion())
+                .eventNetworkChannel();
+
+        eventChannel.addListener(event -> {
+            FriendlyByteBuf payload = event.getPayload();
+            if (payload == null) return;
+
+            FriendlyByteBuf copy = new FriendlyByteBuf(Unpooled.buffer());
+            copy.writeBytes(payload.copy());
+
+            var context = event.getSource();
+            if (context.getDirection().getOriginationSide().isClient()) {
+                if (channel.hasPacketsToServer() && context.getSender() != null) {
+                    var sender = context.getSender();
+                    context.enqueueWork(() -> channel.handleToServer(copy, sender,
+                            p -> context.getConnection().send(
+                                    ModLoader.get().createPacketToClient(channel.getChannelId(), p)
+                            )));
+                }
+            } else {
+                if (channel.hasPacketsToClient()) {
+                    context.enqueueWork(() -> channel.handleToClient(copy));
+                }
+            }
+            context.setPacketHandled(true);
+        });
+        //?} else {
+        /*String version = String.valueOf(channel.getNetworkVersion());
         EventNetworkChannel eventChannel = NetworkRegistry.ChannelBuilder
                 .named(channel.getChannelId())
                 .clientAcceptedVersions(s -> true)
@@ -191,6 +230,7 @@ public class ForgeModLoader implements ModLoader {
             }
             context.setPacketHandled(true);
         });
+        *///?}
     }
 
     @Override
@@ -198,7 +238,11 @@ public class ForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToClient payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        return NetworkDirection.PLAY_TO_CLIENT.buildPacket(new ImmutablePair<>(buffer, 0), channelId).getThis();
+        //? if >=1.20.2 {
+        return NetworkDirection.PLAY_TO_CLIENT.buildPacket(buffer, channelId).getThis();
+        //?} else {
+        /*return NetworkDirection.PLAY_TO_CLIENT.buildPacket(new ImmutablePair<>(buffer, 0), channelId).getThis();
+        *///?}
     }
 
     @Override
@@ -206,7 +250,11 @@ public class ForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToServer payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        return NetworkDirection.PLAY_TO_SERVER.buildPacket(new ImmutablePair<>(buffer, 0), channelId).getThis();
+        //? if >=1.20.2 {
+        return NetworkDirection.PLAY_TO_SERVER.buildPacket(buffer, channelId).getThis();
+        //?} else {
+        /*return NetworkDirection.PLAY_TO_SERVER.buildPacket(new ImmutablePair<>(buffer, 0), channelId).getThis();
+        *///?}
     }
 
     @Override

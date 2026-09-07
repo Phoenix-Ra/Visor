@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.screens.settings.categories.controls;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
 import org.vmstudio.visor.api.client.gui.helpers.GuiHelper;
 import org.vmstudio.visor.api.client.gui.overlays.options.OptionTextures;
@@ -131,9 +132,9 @@ public class VRSettingsCreateKeyAction extends VROptionsSet {
     @Override
     public void onTick() {
         super.onTick();
-        actionIdEdit.tick();
-        actionNameEdit.tick();
-        actionKeyEdit.tick();
+        McGuiUtils.tickEditBox(actionIdEdit);
+        McGuiUtils.tickEditBox(actionNameEdit);
+        McGuiUtils.tickEditBox(actionKeyEdit);
 
         checkCreateRequirements();
     }

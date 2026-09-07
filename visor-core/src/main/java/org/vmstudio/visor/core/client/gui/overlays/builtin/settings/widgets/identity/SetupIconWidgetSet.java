@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.overlays.builtin.settings.widgets.identity;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.vmstudio.visor.api.client.gui.helpers.GuiHelper;
@@ -18,7 +19,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -138,7 +138,7 @@ public class SetupIconWidgetSet implements WidgetSet {
 
     @Override
     public void onTick() {
-        editorTexturePath.tick();
+        McGuiUtils.tickEditBox(editorTexturePath);
     }
 
     public void setIconPath(String path){

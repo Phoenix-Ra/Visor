@@ -20,8 +20,10 @@ accessible field net/minecraft/client/gui/components/EditBox responder Ljava/uti
 # Used in: VROverlayChat
 accessible field net/minecraft/client/gui/components/ChatComponent trimmedMessages Ljava/util/List;
 
-# Used in: HandEffectCrosshair
-accessible field net/minecraft/client/gui/Gui GUI_ICONS_LOCATION Lnet/minecraft/resources/ResourceLocation;
+# Used in: HandEffectCrosshair (via McVersionClientUtils.crosshairTexture)
+#? if <1.20.2 {
+#accessible field net/minecraft/client/gui/Gui GUI_ICONS_LOCATION Lnet/minecraft/resources/ResourceLocation;
+#?}
 
 # ------ INPUT ------------------
 

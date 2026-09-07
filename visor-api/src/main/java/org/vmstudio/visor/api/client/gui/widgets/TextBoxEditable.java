@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiEventListener;
 import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,7 +36,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TextBoxEditable extends AbstractWidget {
+public class TextBoxEditable extends AbstractWidget implements McGuiEventListener {
     private static final int CURSOR_INSERT_COLOR = -3092272;
     private static final int LINE_PADDING = 2;
 

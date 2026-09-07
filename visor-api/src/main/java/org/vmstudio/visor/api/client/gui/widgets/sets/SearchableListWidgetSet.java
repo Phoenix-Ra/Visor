@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets.sets;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import org.vmstudio.visor.api.client.gui.widgets.ButtonImaged;
 import org.vmstudio.visor.api.client.gui.widgets.EditBoxImaged;
@@ -70,7 +71,7 @@ public class SearchableListWidgetSet extends DynamicWidgetSet{
     @Override
     public void onTick() {
         if(searchBox != null) {
-            searchBox.tick();
+            McGuiUtils.tickEditBox(searchBox);
         }
         if(filterButton != null
                 && filterWidgetSet != null

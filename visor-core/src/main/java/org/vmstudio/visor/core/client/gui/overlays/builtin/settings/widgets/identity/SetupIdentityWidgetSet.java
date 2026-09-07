@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.overlays.builtin.settings.widgets.identity;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import org.vmstudio.visor.api.client.gui.overlays.options.OptionTextures;
 import org.vmstudio.visor.api.client.gui.widgets.EditBoxImaged;
@@ -119,9 +120,9 @@ public class SetupIdentityWidgetSet implements WidgetSet {
     @Override
     public void onTick() {
         if(idWidget != null) {
-            idWidget.tick();
+            McGuiUtils.tickEditBox(idWidget);
         }
-        nameWidget.tick();
+        McGuiUtils.tickEditBox(nameWidget);
         descriptionWidget.tick();
         setupIconWidget.onTick();
     }

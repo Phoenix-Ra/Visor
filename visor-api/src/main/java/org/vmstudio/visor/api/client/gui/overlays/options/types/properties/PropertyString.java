@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.overlays.options.types.properties;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import me.phoenixra.atumconfig.api.config.Config;
 import org.vmstudio.visor.api.client.gui.widgets.EditBoxImaged;
 import org.vmstudio.visor.api.client.gui.widgets.info.WidgetInfoEditBox;
@@ -59,7 +60,7 @@ public class PropertyString extends Property<String> {
             }
         });
 
-        widget.moveCursorToStart();
+        McGuiUtils.moveCursorToStart(widget);
 
         return widget;
     }

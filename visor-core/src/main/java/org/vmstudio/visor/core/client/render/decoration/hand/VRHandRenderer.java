@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.hand;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
@@ -532,7 +533,7 @@ public class VRHandRenderer {
     ) {
         boolean mainHand = arm != HumanoidArm.LEFT;
         float handFactor = mainHand ? 1.0F : -1.0F;
-        RenderSystem.setShaderTexture(0, player.getSkinTextureLocation());
+        RenderSystem.setShaderTexture(0, McVersionClientUtils.getSkinTexture(player));
 
         poseStack.pushPose();
 
@@ -544,7 +545,7 @@ public class VRHandRenderer {
         float armScale = 0.4F;
         poseStack.scale(armScale, armScale, armScale);
 
-        boolean slim = "slim".equals(player.getModelName());
+        boolean slim = "slim".equals(McVersionClientUtils.getModelName(player));
         float sideShift = slim ? -0.34375F : -0.375F;
         float depthShift = slim ? 0.78125F : 0.75F;
         poseStack.translate(sideShift * handFactor, 0.0F, depthShift);

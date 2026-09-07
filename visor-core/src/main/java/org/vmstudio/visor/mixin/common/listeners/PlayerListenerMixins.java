@@ -11,13 +11,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+//? if >=1.20.2 {
+import net.minecraft.server.network.CommonListenerCookie;
+//?}
 
 public class PlayerListenerMixins {
     @Mixin(PlayerList.class)
     public static class PlayerListMixin {
 
+        // 1.20.2 added the CommonListenerCookie argument
+        //? if >=1.20.2 {
         @Inject(at = @At("HEAD"), method = "placeNewPlayer")
+        private void visor$onLogin(Connection connection, ServerPlayer serverPlayer,
+                                   CommonListenerCookie cookie, CallbackInfo ci) {
+        //?} else {
+        /*@Inject(at = @At("HEAD"), method = "placeNewPlayer")
         private void visor$onLogin(Connection connection, ServerPlayer serverPlayer, CallbackInfo ci) {
+        *///?}
             if (VRServerSettings.isVrOnly()){
                 ServerNetworking.kickDelayedIfNoVR(serverPlayer);
             }

@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.screens.settings.categories.controls;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
 import org.vmstudio.visor.api.client.gui.helpers.GuiHelper;
 import org.vmstudio.visor.api.client.gui.overlays.options.OptionTextures;
@@ -125,7 +126,7 @@ public class VRSettingsActionSets extends VROptionsSet {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        listWidget.mouseScrolled(mouseX, mouseY, delta);
+        McGuiUtils.mouseScrolled(listWidget, mouseX, mouseY, delta);
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 }

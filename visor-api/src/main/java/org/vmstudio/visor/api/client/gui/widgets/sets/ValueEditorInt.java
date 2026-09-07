@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets.sets;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -120,7 +121,7 @@ public class ValueEditorInt implements WidgetSet{
         ) + (minValue < 0 ? 1 : 0);
         editBox.setMaxLength(maxDigits);
 
-        editBox.moveCursorToStart();
+        McGuiUtils.moveCursorToStart(editBox);
 
 
         leftArrow = new ValueDragWidget(leftArrowInfo);
@@ -147,7 +148,7 @@ public class ValueEditorInt implements WidgetSet{
 
     @Override
     public void onTick() {
-        editBox.tick();
+        McGuiUtils.tickEditBox(editBox);
     }
 
 

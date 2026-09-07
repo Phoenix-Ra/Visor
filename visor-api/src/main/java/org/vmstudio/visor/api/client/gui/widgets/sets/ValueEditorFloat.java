@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets.sets;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -123,7 +124,7 @@ public class ValueEditorFloat implements WidgetSet{
         int maxLen = intPartWidth + 1 /* '.' */ + 8 /* decimals */ + (minValue < 0 ? 1 : 0);
         editBox.setMaxLength(Math.max(maxLen, 6));
 
-        editBox.moveCursorToStart();
+        McGuiUtils.moveCursorToStart(editBox);
 
 
         leftArrow = new ValueDragWidget(leftArrowInfo);
@@ -150,7 +151,7 @@ public class ValueEditorFloat implements WidgetSet{
 
     @Override
     public void onTick() {
-        editBox.tick();
+        McGuiUtils.tickEditBox(editBox);
     }
 
     private static String formatFloat(float v) {

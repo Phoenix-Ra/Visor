@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.screens.settings.categories;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
 import org.vmstudio.visor.api.client.gui.GuiTexture;
 import org.vmstudio.visor.api.client.gui.helpers.GuiHelper;
@@ -13,9 +14,7 @@ import org.vmstudio.visor.api.client.gui.widgets.info.*;
 import org.vmstudio.visor.api.client.gui.widgets.lists.CheckboxList;
 import org.vmstudio.visor.api.client.gui.widgets.lists.TexturedSelectionList;
 import org.vmstudio.visor.api.client.gui.widgets.sets.DynamicWidgetSet;
-import org.vmstudio.visor.api.common.VRException;
 import org.vmstudio.visor.api.common.addon.component.ComponentIds;
-import org.vmstudio.visor.api.common.addon.component.ComponentRegistry;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import org.vmstudio.visor.core.client.ClientContext;
 import org.vmstudio.visor.core.client.VisorClientImpl;
@@ -926,8 +925,8 @@ public class VRSettingsPresets extends VROptionsSet {
         @Override
         public void onTick() {
             updateConfirmState();
-            idEditBix.tick();
-            nameEditBix.tick();
+            McGuiUtils.tickEditBox(idEditBix);
+            McGuiUtils.tickEditBox(nameEditBix);
             descriptionTextBox.tick();
         }
 

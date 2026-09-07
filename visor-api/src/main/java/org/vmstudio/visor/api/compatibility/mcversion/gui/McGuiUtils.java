@@ -1,5 +1,7 @@
 package org.vmstudio.visor.api.compatibility.mcversion.gui;
 
+import net.minecraft.client.gui.components.AbstractSelectionList;
+import net.minecraft.client.gui.components.EditBox;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -17,7 +19,7 @@ import net.minecraft.client.input.MouseButtonInfo;
 *///?}
 
 /**
- * Utils for cross-mc-version GUI methods
+ * Cross-mc-version Utils for GUI methods
  */
 @Environment(EnvType.CLIENT)
 public class McGuiUtils {
@@ -93,10 +95,10 @@ public class McGuiUtils {
     public static boolean mouseScrolled(GuiEventListener listener,
                                         double mouseX, double mouseY, double verticalAmount) {
         //? if >=1.20.2 {
-        /*return listener.mouseScrolled(mouseX, mouseY, 0, verticalAmount);
-        *///?} else {
-        return listener.mouseScrolled(mouseX, mouseY, verticalAmount);
-        //?}
+        return listener.mouseScrolled(mouseX, mouseY, 0, verticalAmount);
+        //?} else {
+        /*return listener.mouseScrolled(mouseX, mouseY, verticalAmount);
+        *///?}
     }
 
     public static boolean keyPressed(GuiEventListener listener,
@@ -127,6 +129,26 @@ public class McGuiUtils {
 
 
     // ------- KEY MODIFIERS -------
+
+    public static void moveCursorToStart(EditBox editBox) {
+        //? if >=1.20.2 {
+        editBox.moveCursorToStart(false);
+        //?} else {
+        /*editBox.moveCursorToStart();
+        *///?}
+    }
+
+    public static void tickEditBox(EditBox editBox) {
+        //? if <1.20.2 {
+        /*editBox.tick();
+        *///?}
+    }
+
+    public static void setRenderTopAndBottom(AbstractSelectionList<?> list, boolean render) {
+        //? if <1.20.2 {
+        /*list.setRenderTopAndBottom(render);
+        *///?}
+    }
 
     public static boolean hasControlDown() {
         //? if >=1.21.9 {

@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects.hand;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -38,9 +39,9 @@ import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 public class HandEffectCrosshair extends VRHandEffect {
     public static final String ID = "crosshair";
 
-    private static final ResourceLocation ICONS_LOC = Gui.GUI_ICONS_LOCATION;
+    private static final ResourceLocation ICONS_LOC = McVersionClientUtils.crosshairTexture();
     private static final float BASE_SCALE = 0.125f;
-    private static final float UV_SIZE = 15f / 256f;
+    private static final float UV_SIZE = McVersionClientUtils.crosshairUvSize();
     private static final float LIGHT_OFFSET = -0.01f;
     private static final float FULL_BRIGHTNESS = 1.0f;
     private static final float MISS_BRIGHTNESS = 0.5f;

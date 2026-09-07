@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.overlays.options.types.properties;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import me.phoenixra.atumconfig.api.config.Config;
 import org.vmstudio.visor.api.client.gui.widgets.EditBoxImaged;
@@ -74,7 +75,7 @@ public class PropertyInt extends Property<Integer> {
         ) + (minValue < 0 ? 1 : 0);
         widget.setMaxLength(maxDigits);
 
-        widget.moveCursorToStart();
+        McGuiUtils.moveCursorToStart(widget);
 
         return widget;
     }

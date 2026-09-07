@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets.lists;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiEventListener;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 
-public class DropDownListWidget extends AbstractButton {
+public class DropDownListWidget extends AbstractButton implements McGuiEventListener {
 
     private final int ITEM_HEIGHT = 12;
 

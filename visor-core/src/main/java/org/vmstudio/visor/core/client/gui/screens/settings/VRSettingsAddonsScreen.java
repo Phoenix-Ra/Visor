@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.screens.settings;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import com.mojang.blaze3d.platform.InputConstants;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
@@ -88,7 +89,7 @@ public class VRSettingsAddonsScreen extends McScreen {
             );
         }
         list.setRenderBackground(false);
-        list.setRenderTopAndBottom(false);
+        McGuiUtils.setRenderTopAndBottom(list, false);
         this.addWidget(this.list);
 
         //Back button
@@ -113,7 +114,6 @@ public class VRSettingsAddonsScreen extends McScreen {
 
     @Override
     protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.list.renderBackground(guiGraphics);
         this.list.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
@@ -137,13 +137,15 @@ public class VRSettingsAddonsScreen extends McScreen {
             return Math.min(300, this.width - 50);
         }
 
+        // vanilla stopped calling renderBackground on lists in 1.20.2, so draw it here instead
         @Override
-        protected void renderBackground(GuiGraphics guiGraphics) {
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             guiGraphics.fill(
                     this.x0, this.y0,
                     this.x1, this.y1,
                     AtumColor.BLACK.withAlpha(0.5f).asInt()
             );
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
     }
 

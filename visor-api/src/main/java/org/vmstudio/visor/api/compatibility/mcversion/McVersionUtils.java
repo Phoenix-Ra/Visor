@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringUtil;
 
 /**
- * Utils for common cross-mc-version methods
+ * Cross-mc-version Utils for common methods
  */
 public class McVersionUtils {
     private McVersionUtils() {

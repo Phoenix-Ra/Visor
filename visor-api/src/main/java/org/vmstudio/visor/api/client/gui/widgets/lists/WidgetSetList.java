@@ -1,6 +1,7 @@
 package org.vmstudio.visor.api.client.gui.widgets.lists;
 
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiEventListener;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import org.vmstudio.visor.api.VisorAPI;
@@ -25,7 +26,7 @@ import java.util.*;
  * Entries are not selectable — each entry manages its own widgets
  * and interaction.
  */
-public class WidgetSetList implements GuiEventListener, Renderable, NarratableEntry {
+public class WidgetSetList implements McGuiEventListener, Renderable, NarratableEntry {
 
     @Getter
     private final WidgetInfoWidgetSetList widgetInfo;

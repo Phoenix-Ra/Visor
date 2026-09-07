@@ -1,5 +1,6 @@
 package org.vmstudio.visor.api.client.gui.widgets.sets;
 
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import lombok.Getter;
 import lombok.Setter;
 import me.phoenixra.atumconfig.api.tuples.PairRecord;
@@ -95,7 +96,7 @@ public class FiltersListWidgetSet<T> implements FilterListWidgetSet<T> {
     @Override
     public void onTick() {
         if(searchBox != null){
-            searchBox.tick();
+            McGuiUtils.tickEditBox(searchBox);
         }
     }
 
