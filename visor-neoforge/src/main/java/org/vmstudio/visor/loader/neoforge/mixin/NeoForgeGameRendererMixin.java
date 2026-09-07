@@ -22,7 +22,7 @@ public class NeoForgeGameRendererMixin {
     }
 
     @Redirect(at = @At(value = "INVOKE",
-            target = "Lnet/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles;getRoll()F",
+            target = "Lnet/neoforged/neoforge/client/event/ViewportEvent$ComputeCameraAngles;getRoll()F",
             remap = false),
             method = "renderLevel")
     public float visor$dropEventRollInEyes(ViewportEvent.ComputeCameraAngles event) {

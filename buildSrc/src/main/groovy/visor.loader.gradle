@@ -141,6 +141,15 @@ tasks.register("buildAndCollect", Copy) {
     group = "build"
     description = "Builds the ${loader} ${minecraft_version} mod and API jars and copies them to <root>/build/libs"
     dependsOn "build"
+    def marker = "+mc${minecraft_version}-${loader}"
+    doFirst {
+        def dir = rootProject.layout.buildDirectory.dir("libs").get().asFile
+        dir.listFiles()?.each { f ->
+            if (f.name.endsWith(".jar") && f.name.contains(marker)) {
+                f.delete()
+            }
+        }
+    }
     from(remapJar.archiveFile, remapApiJar.archiveFile)
     into(rootProject.layout.buildDirectory.dir("libs"))
 }
