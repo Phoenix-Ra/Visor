@@ -1,22 +1,26 @@
-architectury {
+// Build script of every ":visor-api:<mc>" subproject.
+plugins {
+    id "visor.minecraft"
+}
 
-    common(rootProject.enabled_platforms.split(","))
-}
-loom{
-    accessWidenerPath = file("src/main/resources/visor.accesswidener")
-}
 dependencies {
     // @Environment annotation and mixin extras
-    compileOnly(libs.fabric.loader)
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
 
-    // ---- LOCAL DEPENDENCY
-    modApi name: 'atumvr-api-1.14.0beta-snapshot#23'
-    modApi name: 'atumvr-core-1.14.0beta-snapshot#23'
-    // ----
-    //api(libs.atumvr.api)
-    //api(libs.atumvr.core)
-    api(libs.atumvr.config)
+    modApi atumvr("api")
+    modApi atumvr("core")
+    api "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
+}
 
-    compileOnly(libs.bundles.annotations)
-    annotationProcessor(libs.bundles.annotations)
+tasks.named("remapJar") { enabled = false }
+tasks.named("remapSourcesJar") { enabled = false }
+
+configurations {
+    apiJava      { canBeConsumed = true; canBeResolved = false }
+    apiResources { canBeConsumed = true; canBeResolved = false }
+}
+afterEvaluate {
+    def generate = tasks.named("stonecutterGenerate")
+    sourceSets.main.java.srcDirs.each { dir -> artifacts.add("apiJava", dir) { builtBy generate } }
+    sourceSets.main.resources.srcDirs.each { dir -> artifacts.add("apiResources", dir) { builtBy generate } }
 }

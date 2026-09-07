@@ -1,0 +1,142 @@
+/* Plugin applied to the MOD LOADER subprojects */
+plugins {
+    id "visor.minecraft"
+    id "com.gradleup.shadow"
+    id "maven-publish"
+}
+
+def loader = branch
+def apiPath = ":visor-api:${minecraft_version}"
+def corePath = ":visor-core:${minecraft_version}"
+
+// ---- Shared sources ------------------------------------------------------------------------
+configurations {
+    apiJava       { canBeConsumed = false; canBeResolved = true }
+    apiResources  { canBeConsumed = false; canBeResolved = true }
+    coreJava      { canBeConsumed = false; canBeResolved = true }
+    coreResources { canBeConsumed = false; canBeResolved = true }
+    shadowBundle  { canBeConsumed = false; canBeResolved = true }
+}
+
+dependencies {
+    compileOnly project(path: apiPath, configuration: "namedElements")
+    compileOnly project(path: corePath, configuration: "namedElements")
+    apiJava       project(path: apiPath, configuration: "apiJava")
+    apiResources  project(path: apiPath, configuration: "apiResources")
+    coreJava      project(path: corePath, configuration: "coreJava")
+    coreResources project(path: corePath, configuration: "coreResources")
+
+    // Compile-time stubs of optional mods' internals, never shipped
+    compileOnly project(":visor-core:stubs")
+
+    // Optional mods the core mixins target
+    modCompileOnly "maven.modrinth:sodium:${sodium_version}"
+    modCompileOnly("maven.modrinth:iris:${iris_version}") { transitive = false }
+
+    modImplementation atumvr("api")
+    modImplementation atumvr("core")
+    shadowBundle(atumvr("api")) { transitive = false }
+    shadowBundle(atumvr("core")) { transitive = false }
+
+    implementation "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
+    shadowBundle "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
+}
+
+compileJava {
+    dependsOn configurations.apiJava, configurations.coreJava
+    source configurations.apiJava, configurations.coreJava
+}
+processResources {
+    dependsOn configurations.apiResources, configurations.coreResources
+    from configurations.apiResources, configurations.coreResources
+}
+sourcesJar {
+    from configurations.apiJava, configurations.coreJava
+}
+
+// ---- Mod jar pipeline -----------------------------------------------------------------------
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = "dev-shadow"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    def relocations = [
+            "me.phoenixra.atumconfig": "atumconfig",
+            "org.yaml.snakeyaml"     : "snakeyaml",
+            "org.tomlj"              : "tomlj",
+            "org.antlr"              : "antlr",
+            "org.checkerframework"   : "checkerframework",
+            "com.google.gson"        : "gson",
+            "com.google.errorprone"  : "errorprone",       // annotations pulled in by gson
+            "redempt.crunch"         : "crunch",
+    ]
+    relocations.each { original, alias -> relocate original, "${mod_group}.${mod_id}.libs.${alias}" }
+
+    exclude "META-INF/maven/**", "META-INF/versions/**", "META-INF/proguard/**", "module-info.class"
+}
+
+remapJar {
+    dependsOn shadowJar
+    inputFile = shadowJar.archiveFile        // remap the bundled jar, not the plain one
+}
+
+// ---- API jar --------------------------------------------------------------------------------
+def apiPackage = "org/vmstudio/visor/api/**"
+
+tasks.register("processApiResources", Sync) {
+    from(project.parent.file("src/apijar")) { expand(resourcePlaceholders) }
+    from(project.parent.parent.file("visor-api/src/main/resources/visor.accesswidener"))
+    into layout.buildDirectory.dir("apijar")
+    inputs.properties(resourcePlaceholders)
+}
+
+tasks.register("apiJar", Jar) {
+    from(sourceSets.main.output) { include apiPackage }
+    from(processApiResources)
+    archiveClassifier = "api-dev"
+}
+
+tasks.register("remapApiJar", net.fabricmc.loom.task.RemapJarTask) {
+    dependsOn apiJar
+    inputFile = apiJar.archiveFile
+    archiveClassifier = "api"
+    addNestedDependencies = false
+    classpath.from(sourceSets.main.compileClasspath)   // the remapper needs the class hierarchy
+}
+
+tasks.named("build") { dependsOn remapApiJar }
+
+// ---- Publishing -----------------------------------------------------------------------------
+publishing {
+    publications {
+        mod(MavenPublication) {
+            groupId = mod_group
+            artifactId = loader
+            version = project.version
+            artifact(remapApiJar) { classifier = null }
+            artifact(remapJar) { classifier = "mod" }
+            artifact remapSourcesJar
+        }
+    }
+}
+
+// ---- Running --------------------------------------------------------------------------------
+loom {
+    runs {
+        configureEach {
+            preferGradleTask = true
+            ideConfigGenerated stonecutter.current.active
+            configName = "${loader.capitalize()} ${minecraft_version} ${name}"
+            runDir "../../../run/${loader}/${minecraft_version}/${name}"
+        }
+    }
+}
+
+// ---- Build ----------------------------------------------------------------------------------
+tasks.register("buildAndCollect", Copy) {
+    group = "build"
+    description = "Builds the ${loader} ${minecraft_version} mod and API jars and copies them to <root>/build/libs"
+    dependsOn "build"
+    from(remapJar.archiveFile, remapApiJar.archiveFile)
+    into(rootProject.layout.buildDirectory.dir("libs"))
+}

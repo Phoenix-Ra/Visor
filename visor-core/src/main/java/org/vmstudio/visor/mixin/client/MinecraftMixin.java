@@ -539,7 +539,8 @@ public abstract class MinecraftMixin implements MinecraftExtension {
             // Don't block
         }
     }
-    @Inject(method = "close", at = @At("HEAD"))
+    // close() overrides AutoCloseable, so it carries the same name in every namespace
+    @Inject(method = "close", at = @At("HEAD"), remap = false)
     private void visor$destroyVrOnClose(CallbackInfo ci) {
         try {
             if (VisorState.get().isInitialized()) {

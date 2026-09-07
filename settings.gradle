@@ -1,37 +1,53 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        maven { url = "https://maven.fabricmc.net/" }
-        maven { url = "https://maven.architectury.dev/" }
-        maven { url = "https://maven.minecraftforge.net/" }
-        maven { url = "https://maven.neoforged.net/" }
         mavenCentral()
-        mavenLocal()
+        maven { name = "Fabric"; url = "https://maven.fabricmc.net/" }
+        maven { name = "Architectury"; url = "https://maven.architectury.dev/" }
+        maven { name = "Forge"; url = "https://maven.minecraftforge.net/" }
+        maven { name = "NeoForge"; url = "https://maven.neoforged.net/releases/" }
+        maven { name = "Stonecutter"; url = "https://maven.kikugie.dev/releases" }
     }
 }
 
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-        maven { url = "https://jitpack.io" }
-        maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
-        maven { url = "https://redempt.dev" }
-        maven { url = 'https://maven.architectury.dev/' }
-        maven { url = "https://maven.fabricmc.net/" }
-        maven { url = 'https://maven.minecraftforge.net/' }
-        exclusiveContent {
-            forRepository { maven { url = "https://api.modrinth.com/maven" } }
-            filter { includeGroup "maven.modrinth" }
-        }
+plugins {
+    id "dev.kikugie.stonecutter" version "0.9.8"
+    // Downloads a JDK when the one required by `java_version` is not installed
+    id "org.gradle.toolchains.foojay-resolver-convention" version "1.0.0"
+}
+
+rootProject.name = "Visor"
+
+// ----- Version targets from stonecutter.properties.toml -----------------
+def targets = stonecutter.properties.rawOrNull("targets")
+if (targets == null) {
+    throw new GradleException("stonecutter.properties.toml needs a [targets] table!")
+}
+def loadersByVersion = new TreeMap()
+targets.asMap().each { version, loaders ->
+    loadersByVersion[version] = loaders.asList().collect { it.asPrimitive().content.toString() }
+}
+def versionsFor = { String loader -> loadersByVersion.findAll { it.value.contains(loader) }.keySet() as String[] }
+
+// ----- StoneCutter create -----------------------------------------
+stonecutter {
+    kotlinController = false            // use Groovy
+    centralScript = "build.gradle"      // <branch>/build.gradle
+
+    create(rootProject) {
+        // Loader independent branches: the public API and the implementation
+        branch("visor-api")  { versions(loadersByVersion.keySet() as String[]) }
+        branch("visor-core") { versions(loadersByVersion.keySet() as String[]) }
+
+        // Mod Loader branches
+        branch("visor-fabric") { versions(versionsFor("fabric")) }
+        branch("visor-forge")  { versions(versionsFor("forge")) }
+
+        // Main version, should be used for git commits
+        vcsVersion = "1.20.1"
     }
 }
 
-rootProject.name = 'Visor'
-include 'visor-core','visor-forge','visor-fabric','visor-api'
-include 'visor-api:fabric'
-findProject(':visor-api:fabric')?.name = 'fabric'
-include 'visor-api:forge'
-findProject(':visor-api:forge')?.name = 'forge'
-include 'visor-core:stubs'
-findProject(':visor-core:stubs')?.name = 'stubs'
-
+// Version independent module
+// Not a Stonecutter branch - it never touches Minecraft.
+include "visor-core:stubs"

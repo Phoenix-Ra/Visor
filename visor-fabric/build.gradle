@@ -1,115 +1,26 @@
+// Build script of every ":visor-fabric:<mc>" subproject.
 plugins {
-    alias(libs.plugins.shadow)
+    id "visor.loader"
 }
 
-architectury {
-    platformSetupLoomIde()
-    fabric()
-}
+def fabricApiVersion = "${fabric_api_version}+${minecraft_version}"
 
-loom {
-    accessWidenerPath = project(":visor-api").file("src/main/resources/visor.accesswidener")
-}
-
-configurations {
-    common
-    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
-    compileClasspath.extendsFrom common
-    runtimeClasspath.extendsFrom common
-    developmentFabric.extendsFrom common
-}
-version = version+"+mc"+libs.versions.minecraftVersion.get()+"-fabric"
 dependencies {
-    compileOnly(project(path: ':visor-api', configuration: 'namedElements'))
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 
-    shadowCommon(project(path: ":visor-api", configuration: "namedElements")) { transitive false }
-    shadowCommon(project(path: ":visor-core", configuration: "transformProductionFabric")) { transitive false }
-    common(project(path: ":visor-core", configuration: "namedElements")) { transitive false }
+    // Natives
+    include(implementation("org.lwjgl:lwjgl-openxr:${lwjgl_version}"))
+    include(implementation("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux"))
+    include(implementation("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows"))
+    include(implementation("org.lwjgl:lwjgl-vulkan:${lwjgl_version}"))
 
-
-
-    String lwjglVersion = "${libs.versions.lwjgl.get()}"
-    String fabricApiVersion = "${libs.versions.fabric.api.get()}+${libs.versions.minecraftVersion.get()}";
-
-    modImplementation(libs.fabric.loader)
-    modApi "net.fabricmc.fabric-api:fabric-api:$fabricApiVersion"
-
-
-    // ---- LOCAL DEPENDENCY
-    shadowCommon(modApi(name: 'atumvr-api-1.14.0beta-snapshot#23')) { transitive = false }
-    shadowCommon(modApi(name: 'atumvr-core-1.14.0beta-snapshot#23')) { transitive = false }
-    // ----
-    //shadowCommon(libs.atumvr.api) { transitive = false }
-    //shadowCommon(libs.atumvr.core) { transitive = false }
-    shadowCommon(libs.atumvr.config)
-
-
-
-    include(implementation(libs.lwjgl.openxr.get()))
-    include(implementation("org.lwjgl:lwjgl-openxr:$lwjglVersion:natives-linux"))
-    include(implementation("org.lwjgl:lwjgl-openxr:$lwjglVersion:natives-windows"))
-
-    //vulkan bridge rail; no natives jar - lwjgl-vulkan loads the system loader
-    include(implementation(libs.lwjgl.vulkan.get()))
-
-
-
-    include(modImplementation(fabricApi.module("fabric-resource-loader-v0",  fabricApiVersion)))
-
-    include(modImplementation(fabricApi.module("fabric-api-base",  fabricApiVersion)))
-    include(modImplementation(fabricApi.module("fabric-command-api-v2",  fabricApiVersion)))
-
-
-}
-
-processResources {
-    inputs.property "version", parent.version
-
-    filesMatching("fabric.mod.json") {
-        expand "version": parent.version
-    }
-}
-
-
-shadowJar {
-    exclude "architectury.common.json"
-    exclude "org.joml"
-    exclude "org.lwjgl"
-    exclude "org.slf4j"
-
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
-    configurations = [
-            project.configurations.shadowCommon
-    ]
-    archiveClassifier.set("dev")
-
-    relocate("org.yaml","${project.group}.libs.org.yaml")
-    relocate("org.tomlj","${project.group}.libs.org.tomlj")
-    relocate("org.checkerframework","${project.group}.libs.org.checkerframework")
-    relocate("org.antlr","${project.group}.libs.org.antlr")
-
-    relocate("com.google.gson","${project.group}.libs.com.google.gson")
-    relocate("redempt.crunch","${project.group}.libs.redempt.crunch")
-
+    //Fabric
+    include(modImplementation(fabricApi.module("fabric-api-base", fabricApiVersion)))
+    include(modImplementation(fabricApi.module("fabric-resource-loader-v0", fabricApiVersion)))
+    include(modImplementation(fabricApi.module("fabric-command-api-v2", fabricApiVersion)))
 }
 
 remapJar {
     injectAccessWidener = true
-    input.set shadowJar.archiveFile
-    dependsOn shadowJar
-    archiveClassifier.set('')
-}
-
-sourcesJar {
-    def commonSources = project(":visor-core").sourcesJar
-    def apiSources = project(":visor-api").sourcesJar
-    dependsOn commonSources, apiSources
-    from commonSources.archiveFile.map { zipTree(it) }
-    from apiSources.archiveFile.map { zipTree(it) }
-}
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
 }

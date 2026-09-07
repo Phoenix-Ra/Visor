@@ -1,0 +1,66 @@
+plugins {
+    id "dev.kikugie.stonecutter"
+}
+
+// Currently used version
+// Switch with `gradlew "Set active project to <version>"`,
+// go back with `gradlew "Reset active project"`.
+stonecutter.active "1.20.1" /* [SC] DO NOT EDIT */
+
+// ------ Versioning ------------------------------------------
+def versionPropsFile = rootProject.file("version.properties")
+if (!versionPropsFile.exists()) {
+    throw new GradleException("Missing ${versionPropsFile}")
+}
+Properties versionProps = new Properties()
+versionPropsFile.withInputStream { versionProps.load(it) }
+
+def versionPart = { String key, boolean required = true ->
+    def value = versionProps[key]?.toString()?.trim()
+    if (required && (value == null || value.isEmpty())) {
+        throw new GradleException("version.properties is missing '${key}'")
+    }
+    return value ?: ""
+}
+
+def isSnapshot = versionPart("version.snapshot").toBoolean()
+def stage      = versionPart("version.stage", false)
+def major      = versionPart("version.major").toInteger()
+def minor      = versionPart("version.minor").toInteger()
+def patch      = versionPart("version.patch").toInteger()
+def build      = versionPart("version.build").toInteger()
+
+ext.mod_version = (findProperty("modVersion") ?: (isSnapshot
+        ? "${major}.${minor}.${patch}${stage}-snapshot-${build}"
+        : "${major}.${minor}.${patch}${stage}")).toString()
+logger.lifecycle("Versioning: ${mod_version} (${isSnapshot ? 'SNAPSHOT' : 'RELEASE'})")
+
+
+// ------ Generated build tasks ------------------------------------
+def tasksByVersion = new TreeMap()
+stonecutter.tree.getBranches().each { branch ->
+    def branchName = branch.getId()
+    def task = branchName - "visor-" in ["api", "core"] ? "check" : "buildAndCollect"
+
+    branch.getNodes().each { node ->
+        def mcVersion = node.getMetadata().getVersion()
+        tasksByVersion.computeIfAbsent(mcVersion) { [] } << ":${branchName}:${mcVersion}:${task}"
+    }
+}
+tasksByVersion.each { mcVersion, paths ->
+    tasks.register("build-${mcVersion}") {
+        group = "build version"
+        description = "Builds every loader for Minecraft ${mcVersion} into <root>/build/libs"
+        dependsOn paths
+    }
+}
+tasks.register("buildAll") {
+    group = "build version"
+    description = "Builds every loader for every Minecraft version into <root>/build/libs"
+    dependsOn tasksByVersion.values().flatten()
+}
+
+// ------ StoneCutter parameters --------------------------------------
+stonecutter.parameters {
+    swaps.put("mod_version", "\"${mod_version}\";")
+}

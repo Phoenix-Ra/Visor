@@ -1,0 +1,125 @@
+/*
+ * Plugin applied to EVERY versioned subproject (":visor-api:<mc>", ":visor-core:<mc>",
+ * ":visor-fabric:<mc>" etc).
+ */
+plugins {
+    id "java-library"
+    id "dev.architectury.loom"
+}
+
+// ---- Identity -----------------------------------------------------------------------------
+def minecraftVersion = stonecutter.current.version
+project.ext.minecraft_version = minecraftVersion
+project.ext.branch = project.parent.name - "visor-" // remove "visor-" prefix
+
+
+group = "${mod_group}.${mod_id}.${branch}"
+
+base.archivesName = mod_name.toString().replaceAll("\\s+", "")
+// release.yml / publish.yml parse this shape, keep the "+mc" marker
+version = "${mod_version}+mc${minecraftVersion}-${branch}"
+
+// ---- Java ---------------------------------------------------------------------------------
+def javaVersion = java_version as int
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+    withSourcesJar()
+}
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = javaVersion
+}
+
+// ---- Repositories -------------------------------------------------------------------------
+repositories {
+    mavenCentral()
+    maven { name = "Fabric"; url = "https://maven.fabricmc.net/" }
+    maven { name = "Architectury"; url = "https://maven.architectury.dev/" }
+    maven { name = "Forge"; url = "https://maven.minecraftforge.net/" }
+    maven { name = "Mojang"; url = "https://libraries.minecraft.net/" }
+    maven { name = "Parchment"; url = "https://maven.parchmentmc.org" }
+    maven { name = "JitPack"; url = "https://jitpack.io" }
+    maven { name = "Sonatype"; url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { name = "Redempt"; url = "https://redempt.dev" }
+
+    // ---- LOCAL DEPENDENCY: the AtumVR jars in <root>/libs
+    flatDir { dirs rootProject.file("libs") }
+    // ----
+
+    exclusiveContent {
+        forRepository { maven { name = "Modrinth"; url = "https://api.modrinth.com/maven" } }
+        filter { includeGroup "maven.modrinth" }
+    }
+}
+
+// ---- AtumVR ------------------------------------------------------------------------------
+if (!(atumvr_source in ["local", "maven"])) {
+    throw new GradleException("atumvr_source must be \"local\" or \"maven\", got \"${atumvr_source}\"")
+}
+project.ext.atumvr = { String module ->
+    atumvr_source == "local"
+            ? [name: "atumvr-${module}-${atumvr_version}"]
+            : "com.github.Phoenix-Ra.AtumVR:atumvr-${module}:${atumvr_version}"
+}
+
+// ---- Minecraft ----------------------------------------------------------------------------
+project.ext.visorAccessWidener = stonecutter.process(
+        rootProject.file("visor-api/src/main/resources/visor.accesswidener"),
+        "build/visor.accesswidener")
+
+loom {
+    silentMojangMappingsLicense()
+    accessWidenerPath = visorAccessWidener
+    mixin {
+        // At runtime Fabric uses "intermediary" names and Forge uses "SRG" names,
+        // not the Mojang names used by mod.
+        // Mixin needs a "refmap" to translate its targets. Loom generates it.
+        useLegacyMixinAp = true
+        defaultRefmapName = "${mod_id}.refmap.json"
+    }
+}
+
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraftVersion}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchment_version}@zip")
+    }
+
+    compileOnly "org.projectlombok:lombok:${lombok_version}"
+    annotationProcessor "org.projectlombok:lombok:${lombok_version}"
+    compileOnly "org.jetbrains:annotations:${jetbrains_annotations_version}"
+
+    // Natives
+    compileOnly "org.lwjgl:lwjgl-openxr:${lwjgl_version}"
+    compileOnly "org.lwjgl:lwjgl-vulkan:${lwjgl_version}"
+}
+
+// ---- Resources --------------------------------------------------------------
+project.ext.resourcePlaceholders = [
+        mod_id                           : mod_id,
+        mod_name                         : mod_name,
+        mod_version                      : mod_version,
+        mod_authors                      : mod_authors,
+        mod_description                  : mod_description,
+        mod_api_description              : mod_api_description,
+        mod_license                      : mod_license,
+        minecraft_version                : minecraftVersion,
+        java_version                     : java_version,
+        pack_format                      : pack_format,
+        fabric_loader_version            : fabric_loader_version,
+        fabric_loader_version_range      : fabric_loader_version_range,
+        minecraft_version_range_fabric   : minecraft_version_range_fabric,
+        minecraft_version_range_forgelike: minecraft_version_range_forgelike,
+        forge_version_range              : findProperty("forge_version_range") ?: "",
+        neoforge_version_range           : findProperty("neoforge_version_range") ?: "",
+]
+
+processResources {
+    inputs.properties(resourcePlaceholders)
+    // NOT "*.mixins.json": mixin configs name inner classes with '$', which expand() would eat
+    filesMatching(["fabric.mod.json", "META-INF/*.toml", "pack.mcmeta"]) {
+        expand(resourcePlaceholders)
+    }
+}

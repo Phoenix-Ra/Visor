@@ -1,37 +1,44 @@
-architectury {
-
-    common(rootProject.enabled_platforms.split(","))
-}
-
-loom{
-    accessWidenerPath = project(":visor-api").file("src/main/resources/visor.accesswidener")
+// Build script of every ":visor-core:<mc>" subproject.
+plugins {
+    id "visor.minecraft"
 }
 
 dependencies {
-    compileOnly(project(path: ':visor-api', configuration: 'namedElements'))
+    compileOnly project(path: ":visor-api:${minecraft_version}", configuration: "namedElements")
 
-    compileOnly(project(path: ':visor-core:stubs', configuration: 'namedElements'))
+    // Compile-time stubs, never shipped
+    compileOnly project(":visor-core:stubs")
 
     // @Environment annotation and mixin extras
-    modImplementation(libs.fabric.loader)
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
 
+    modApi atumvr("core")
+    implementation "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
 
-    // ---- LOCAL DEPENDENCY
-    modApi name: 'atumvr-core-1.14.0beta-snapshot#23'
-    // ----
-    //api(libs.atumvr.core)
+    // Optional mods the core mixins target
+    modCompileOnly "maven.modrinth:sodium:${sodium_version}"
+    modCompileOnly("maven.modrinth:iris:${iris_version}") { transitive = false }
 
-    //Other mods
-    modCompileOnly(libs.mod.sodium)
-    modCompileOnly(libs.mod.iris) { transitive = false }
-
-
-    testImplementation(platform('org.junit:junit-bom:5.10.2'))
-    testImplementation('org.junit.jupiter:junit-jupiter')
-    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
-    testImplementation('org.joml:joml:1.10.5')
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.joml:joml:1.10.5")
 }
 
 test {
     useJUnitPlatform()
+}
+
+// The core sources are compiled into each loader jar, this node only type-checks them.
+tasks.named("remapJar") { enabled = false }
+tasks.named("remapSourcesJar") { enabled = false }
+
+configurations {
+    coreJava      { canBeConsumed = true; canBeResolved = false }
+    coreResources { canBeConsumed = true; canBeResolved = false }
+}
+afterEvaluate {
+    def generate = tasks.named("stonecutterGenerate")
+    sourceSets.main.java.srcDirs.each { dir -> artifacts.add("coreJava", dir) { builtBy generate } }
+    sourceSets.main.resources.srcDirs.each { dir -> artifacts.add("coreResources", dir) { builtBy generate } }
 }

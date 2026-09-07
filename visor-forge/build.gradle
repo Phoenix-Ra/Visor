@@ -1,139 +1,48 @@
+// Build script of every ":visor-forge:<mc>" subproject.
 plugins {
-    alias(libs.plugins.shadow)
+    id "visor.loader"
 }
 
-architectury {
-    platformSetupLoomIde()
-    forge()
+dependencies {
+    forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // We need it for @Environment annotation, to mark methods/classes
+    // Forge ignores this annotation, but addons will see
+    compileOnly("net.fabricmc:fabric-loader:${fabric_loader_version}") { transitive = false }
+
+    // Forge 1.20.1 use Mixin 0.8.5, which has no @Inject(order = ..) The shared sources use it,
+    // so compile against the 0.8.7 annotations; Forge's runtime simply ignores the extra attribute.
+    compileOnly("dev.architectury:mixin-patched:0.8.7.12") { transitive = false }
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}"))
+
+    //Natives
+    forgeRuntimeLibrary "org.lwjgl:lwjgl-openxr:${lwjgl_version}"
+    forgeRuntimeLibrary "org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux"
+    forgeRuntimeLibrary "org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows"
+    // vulkan bridge
+    forgeRuntimeLibrary "org.lwjgl:lwjgl-vulkan:${lwjgl_version}"
+
+    shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}") { transitive = false }
+    shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-linux") { transitive = false }
+    shadowBundle("org.lwjgl:lwjgl-openxr:${lwjgl_version}:natives-windows") { transitive = false }
+    shadowBundle("org.lwjgl:lwjgl-vulkan:${lwjgl_version}") { transitive = false }
 }
+
 loom {
-    accessWidenerPath = project(":visor-api").file("src/main/resources/visor.accesswidener")
-
     forge {
         convertAccessWideners = true
         extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
 
-        mixinConfig "visor.mixins.json"
-        mixinConfig "visor.sodium.mixins.json"
-        mixinConfig "visor.replaymod.mixins.json"
-        mixinConfig "visor.flashback.mixins.json"
-        mixinConfig "visor.dh.mixins.json"
-        mixinConfig "visor.dynamicfps.mixins.json"
-        mixinConfig "visor.iris.mixins.json"
-        mixinConfig "visor.blur.mixins.json"
-        mixinConfig "visor.mixins.forge.json"
-    }
-}
-
-configurations {
-    common
-    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
-    bundle {
-        // bundle command, to copy jar contents with the shadow plugin
-        canBeResolved = true
-        canBeConsumed = false
-    }
-    compileClasspath.extendsFrom common
-    runtimeClasspath.extendsFrom common
-    developmentForge.extendsFrom common
-}
-
-version = version+"+mc"+libs.versions.minecraftVersion.get()+"-forge"
-
-dependencies {
-    compileOnly(project(path: ':visor-api', configuration: 'namedElements'))
-
-    shadowCommon(project(path: ":visor-api", configuration: "namedElements")) { transitive = false }
-    shadowCommon(project(path: ":visor-core", configuration: "transformProductionForge")) { transitive = false }
-    common(project(path: ":visor-core", configuration: "namedElements")) { transitive false }
-
-
-    //
-    String lwjglVersion = "${libs.versions.lwjgl.get()}"
-    String forgeVersion = "${libs.versions.minecraftVersion.get()}-${libs.versions.forgeVersion.get()}"
-
-    forge "net.minecraftforge:forge:$forgeVersion"
-    //mixin extras
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${libs.versions.mixinExtras.get()}"))
-    implementation(include("io.github.llamalad7:mixinextras-forge:${libs.versions.mixinExtras.get()}"))
-
-
-
-    // ---- LOCAL DEPENDENCY
-    shadowCommon(modApi(name: 'atumvr-api-1.14.0beta-snapshot#23')) { transitive = false }
-    shadowCommon(modApi(name: 'atumvr-core-1.14.0beta-snapshot#23')) { transitive = false }
-    // ----
-    //shadowCommon(libs.atumvr.api) { transitive = false }
-    //shadowCommon(libs.atumvr.core) { transitive = false }
-    shadowCommon(libs.atumvr.config)
-
-
-
-    forgeRuntimeLibrary(libs.lwjgl.openxr)
-    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:$lwjglVersion:natives-linux")
-    forgeRuntimeLibrary("org.lwjgl:lwjgl-openxr:$lwjglVersion:natives-windows")
-
-    //vulkan bridge rail; no natives jar - lwjgl-vulkan loads the system loader
-    forgeRuntimeLibrary(libs.lwjgl.vulkan)
-
-    // shadow the natives
-    bundle(libs.lwjgl.openxr) { transitive = false }
-    bundle("org.lwjgl:lwjgl-openxr:$lwjglVersion:natives-linux") { transitive = false }
-    bundle("org.lwjgl:lwjgl-openxr:$lwjglVersion:natives-windows") { transitive = false }
-    bundle(libs.lwjgl.vulkan) { transitive = false }
-
-}
-
-processResources {
-    inputs.property "version", parent.version
-
-    filesMatching("META-INF/mods.toml") {
-        expand "version": parent.version
-    }
-}
-
-shadowJar {
-    exclude "fabric.mod.json"
-    exclude "architectury.common.json"
-    exclude "org.joml"
-    exclude "org.lwjgl"
-    exclude "org.slf4j"
-
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
-    configurations = [
-            project.configurations.shadowCommon,
-            project.configurations.bundle
-    ]
-    archiveClassifier.set("dev")
-
-    relocate("org.yaml","${project.group}.libs.org.yaml")
-    relocate("org.tomlj","${project.group}.libs.org.tomlj")
-    relocate("org.checkerframework","${project.group}.libs.org.checkerframework")
-    relocate("org.antlr","${project.group}.libs.org.antlr")
-
-    relocate("com.google.gson","${project.group}.libs.com.google.gson")
-    relocate("redempt.crunch","${project.group}.libs.redempt.crunch")
-
-
-}
-
-remapJar {
-    input.set shadowJar.archiveFile
-    dependsOn shadowJar
-    archiveClassifier.set('')
-}
-
-sourcesJar {
-    def commonSources = project(":visor-core").sourcesJar
-    def apiSources = project(":visor-api").sourcesJar
-    dependsOn commonSources, apiSources
-    from commonSources.archiveFile.map { zipTree(it) }
-    from apiSources.archiveFile.map { zipTree(it) }
-}
-
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
+        mixinConfig "${mod_id}.mixins.json"
+        mixinConfig "${mod_id}.sodium.mixins.json"
+        mixinConfig "${mod_id}.replaymod.mixins.json"
+        mixinConfig "${mod_id}.flashback.mixins.json"
+        mixinConfig "${mod_id}.dh.mixins.json"
+        mixinConfig "${mod_id}.dynamicfps.mixins.json"
+        mixinConfig "${mod_id}.iris.mixins.json"
+        mixinConfig "${mod_id}.blur.mixins.json"
+        mixinConfig "${mod_id}.mixins.forge.json"
     }
 }

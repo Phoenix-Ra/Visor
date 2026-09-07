@@ -1,29 +1,28 @@
 modLoader = "javafml"
-loaderVersion = "[46,)"
-license = "MPL-2.0"
+loaderVersion = "${forge_version_range}"
+license = "${mod_license}"
 
 [[mods]]
-modId = "visor"
-version = "${version}"
-displayName = "Visor"
-logoFile = "assets/visor/icon.png"
-authors = "PhoenixRa"
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+logoFile = "assets/${mod_id}/icon.png"
+authors = "${mod_authors}"
 displayTest = "NONE"
 description = '''
-The VR mod that is built to support addons
-
+${mod_description}
 '''
 
-[[dependencies.visor]]
+[[dependencies.${mod_id}]]
 modId = "forge"
 mandatory = true
-versionRange = "[46,)"
+versionRange = "${forge_version_range}"
 ordering = "AFTER"
 side = "BOTH"
 
-[[dependencies.visor]]
+[[dependencies.${mod_id}]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.20,1.20.1]"
+versionRange = "${minecraft_version_range_forgelike}"
 ordering = "AFTER"
 side = "BOTH"

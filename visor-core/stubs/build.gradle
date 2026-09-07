@@ -1,11 +1,17 @@
+// Compile-only stubs helper module for mods compatibility
 plugins {
-    id 'java'
+    id "java-library"
 }
-
-group = 'org.vmstudio'
-version = version+"-stubs"
 
 repositories {
     mavenCentral()
 }
 
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 17
+}

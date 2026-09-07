@@ -1,0 +1,37 @@
+# ---- Mod --------------------------------------------------------------------------------------
+mod_id = "visor"
+mod_name = "Visor"
+mod_group = "org.vmstudio"
+mod_authors = "PhoenixRa"
+mod_description = "Next-gen VR core mod for Minecraft. Based on OpenXR. Built as a platform"
+mod_api_description = "The Visor API. Not a mod! Use only in a development as a dependency."
+mod_license = "MPL-2.0"
+
+# ---- Common dependencies ----------------------------------------------------------------------
+fabric_loader_version = "0.16.14"
+fabric_loader_version_range = ">=0.14.14"
+atumvr_source         = "local"   # "local" = <root>/libs, "maven" = external repository
+atumvr_version        = "1.14.0beta-snapshot#23"
+atumconfig_version    = "1.2.0pre3"
+lwjgl_version         = "3.3.6"
+mixin_extras_version  = "0.4.1"
+lombok_version        = "1.18.46"
+jetbrains_annotations_version = "26.1.0"
+
+# ---- Version Targets --------------------------------------------------------------------------
+[targets]
+"1.20.1" = ["fabric", "forge"]
+
+# ---- Version dependencies ---------------------------------------------------------------------
+["1.20.1"]
+# 1.20 - 1.20.1
+java_version = 17
+pack_format = 15
+minecraft_version_range_fabric = ">=1.20 <1.20.2"
+minecraft_version_range_forgelike = "[1.20,1.20.1]"
+parchment_version = "2023.09.03"
+fabric_api_version = "0.92.3"
+forge_version = "47.4.0"
+forge_version_range = "[47,)"
+sodium_version = "mc1.20.1-0.5.8"
+iris_version = "1.7.1+1.20.1"

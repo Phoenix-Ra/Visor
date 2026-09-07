@@ -1,0 +1,17 @@
+plugins {
+    id "groovy-gradle-plugin"
+}
+
+repositories {
+    gradlePluginPortal()
+    mavenCentral()
+    maven { name = "Fabric"; url = "https://maven.fabricmc.net/" }
+    maven { name = "Architectury"; url = "https://maven.architectury.dev/" }
+    maven { name = "Forge"; url = "https://maven.minecraftforge.net/" }
+    maven { name = "NeoForge"; url = "https://maven.neoforged.net/releases/" }
+}
+
+dependencies {
+    implementation "dev.architectury.loom:dev.architectury.loom.gradle.plugin:1.17.491"
+    implementation "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.6.1"
+}

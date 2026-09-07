@@ -92,7 +92,8 @@ public class PostChainMixin {
     }
 
 
-    @Inject(method = "close", at = @At("TAIL"))
+    // close() overrides AutoCloseable, so it carries the same name in every namespace
+    @Inject(method = "close", at = @At("TAIL"), remap = false)
     private void visor$onClose(CallbackInfo ci) {
         visor$vrPostChains.values().forEach(PostChain::close);
         visor$vrPostChains.clear();
