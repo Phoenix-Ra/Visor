@@ -25,8 +25,10 @@ public class OverlayOptionsGeneral extends OverlayOptionGroup<OverlayOptionsGene
     private final Collection<Property<?>> propertyList;
 
     public OverlayOptionsGeneral(@NotNull VROverlay owner,
+                                 boolean modifiable,
                                  @NotNull List<Property<?>> properties){
         super(owner,
+                modifiable,
                 (it)-> {
                     it.propertyMap.forEach(
                             (key, property) ->
@@ -44,6 +46,11 @@ public class OverlayOptionsGeneral extends OverlayOptionGroup<OverlayOptionsGene
         }
         propertyList = Collections.unmodifiableCollection(propertyMap.values());
     }
+    public OverlayOptionsGeneral(@NotNull VROverlay owner,
+                                 @NotNull List<Property<?>> properties){
+        this(owner, true, properties);
+    }
+
 
     @Override
     public void update(boolean reset) {

@@ -33,13 +33,20 @@ public class OverlayOptionsScreenRegion extends OverlayOptionGroup<OverlayOption
     private int regionHeight;
 
     public OverlayOptionsScreenRegion(@NotNull VROverlay owner,
+                                      boolean modifiable,
                                       int screenWidth, int screenHeight,
                                       @NotNull Supplier<RenderTarget> targetSupplier,
                                       @NotNull Consumer<OverlayOptionsScreenRegion> defaultSettings){
-        super(owner, defaultSettings);
+        super(owner, modifiable, defaultSettings);
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.targetSupplier = targetSupplier;
+    }
+    public OverlayOptionsScreenRegion(@NotNull VROverlay owner,
+                                      int screenWidth, int screenHeight,
+                                      @NotNull Supplier<RenderTarget> targetSupplier,
+                                      @NotNull Consumer<OverlayOptionsScreenRegion> defaultSettings){
+        this(owner, true, screenWidth, screenHeight, targetSupplier, defaultSettings);
     }
 
 

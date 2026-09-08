@@ -172,6 +172,7 @@ public class VROverlayFullscreenWarning extends VROverlayScreen {
         return List.of(
                 new OverlayOptionsPose(
                         this,
+                        false,
                         it -> {
                             it.setTickPose(true);
                             it.setAimedRotation(true);

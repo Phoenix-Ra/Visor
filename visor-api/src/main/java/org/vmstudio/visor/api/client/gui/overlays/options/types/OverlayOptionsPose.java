@@ -36,10 +36,15 @@ public class OverlayOptionsPose extends OverlayOptionGroup<OverlayOptionsPose> {
     private boolean tickPose;
 
     public OverlayOptionsPose(@NotNull VROverlay owner,
+                              boolean modifiable,
                               @NotNull Consumer<OverlayOptionsPose> defaultSettings){
-        super(owner, defaultSettings);
+        super(owner, modifiable, defaultSettings);
         positionOffset = new Vector3f();
         rotationOffset = new Quaternionf();
+    }
+    public OverlayOptionsPose(@NotNull VROverlay owner,
+                              @NotNull Consumer<OverlayOptionsPose> defaultSettings){
+        this(owner, true, defaultSettings);
     }
 
 

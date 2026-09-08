@@ -23,7 +23,7 @@ public class OverlayOptionsResizing extends OverlayOptionGroup<OverlayOptionsRes
 
     public OverlayOptionsResizing(@NotNull VROverlay owner,
                                   @NotNull Consumer<OverlayOptionsResizing> defaultSettings){
-        super(owner, defaultSettings);
+        super(owner, false, defaultSettings);
     }
 
 
@@ -61,11 +61,6 @@ public class OverlayOptionsResizing extends OverlayOptionGroup<OverlayOptionsRes
         }
         this.resizingScale = newValue;
         changesNotSaved = true;
-    }
-
-    @Override
-    public boolean isModifiable() {
-        return false;
     }
 
     @Override

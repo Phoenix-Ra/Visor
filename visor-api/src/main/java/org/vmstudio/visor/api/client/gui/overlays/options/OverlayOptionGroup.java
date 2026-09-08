@@ -1,6 +1,7 @@
 package org.vmstudio.visor.api.client.gui.overlays.options;
 
 import lombok.Getter;
+import lombok.Setter;
 import me.phoenixra.atumconfig.api.config.Config;
 import me.phoenixra.atumconfig.api.config.ConfigFile;
 import org.jetbrains.annotations.Nullable;
@@ -25,10 +26,25 @@ public abstract class OverlayOptionGroup<T extends OverlayOptionGroup<T>> {
 
     protected boolean changesNotSaved;
 
+    /**
+     *  If supports modification by player.
+     *  <p>
+     *      When false, the options are not visible
+     *      by player in VR settings
+     *  </p>
+     */
+    protected final boolean modifiable;
+
     public OverlayOptionGroup(@NotNull VROverlay owner,
+                              boolean modifiable,
                               @NotNull Consumer<T> defaultsSupplier) {
         this.owner = owner;
+        this.modifiable = modifiable;
         this.defaultsSupplier = defaultsSupplier;
+    }
+    public OverlayOptionGroup(@NotNull VROverlay owner,
+                              @NotNull Consumer<T> defaultsSupplier) {
+        this(owner, true, defaultsSupplier);
     }
 
     /**
@@ -173,17 +189,6 @@ public abstract class OverlayOptionGroup<T extends OverlayOptionGroup<T>> {
         return false;
     }
 
-    /**
-     * If supports modification by player.
-     * <p>
-     *     When false, the options are not visible
-     *     by player in VR settings
-     * </p>
-     * @return
-     */
-    public boolean isModifiable(){
-        return true;
-    }
     /**
      * If supports copying data from other instance.
      *

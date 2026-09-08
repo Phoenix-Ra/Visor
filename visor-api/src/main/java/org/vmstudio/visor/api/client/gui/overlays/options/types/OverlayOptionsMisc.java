@@ -22,8 +22,13 @@ public class OverlayOptionsMisc extends OverlayOptionGroup<OverlayOptionsMisc> {
 
 
     public OverlayOptionsMisc(@NotNull VROverlay owner,
+                              boolean modifiable,
                               @NotNull Consumer<OverlayOptionsMisc> defaultSettings){
-        super(owner, defaultSettings);
+        super(owner, modifiable, defaultSettings);
+    }
+    public OverlayOptionsMisc(@NotNull VROverlay owner,
+                              @NotNull Consumer<OverlayOptionsMisc> defaultSettings){
+        this(owner, true, defaultSettings);
     }
 
     public void setOptionsUpdaterType(OptionsUpdaterType newValue) {
