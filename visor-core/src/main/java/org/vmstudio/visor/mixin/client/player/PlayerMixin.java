@@ -23,7 +23,9 @@ public abstract class PlayerMixin extends LivingEntity {
 
     // the probe box keeps its original top, so a raised step height cannot make it
     // catch on whatever sits above the ledge
-    @Redirect( method = "maybeBackOffFromEdge",
+    // 1.20.5 canFallAtLeast already probes only below the feet
+    //? if <1.20.5 {
+    /*@Redirect( method = "maybeBackOffFromEdge",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;move(DDD)Lnet/minecraft/world/phys/AABB;"))
     private AABB visor$keepEdgeProbeTop(AABB instance,
                                         double x,
@@ -45,4 +47,5 @@ public abstract class PlayerMixin extends LivingEntity {
                 instance.maxZ + z
         );
     }
+    *///?}
 }

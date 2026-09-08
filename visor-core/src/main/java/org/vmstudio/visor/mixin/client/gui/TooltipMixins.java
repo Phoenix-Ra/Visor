@@ -7,9 +7,16 @@ import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-//? if >=1.20.3 {
+//? if >=1.20.5 {
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.gui.components.Tooltip;
-//?} else {
+import net.minecraft.client.gui.components.WidgetTooltipHolder;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import org.spongepowered.asm.mixin.Shadow;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McButton;
+//?} elif >=1.20.3 {
+/*import net.minecraft.client.gui.components.Tooltip;
+*///?} else {
 /*import net.minecraft.client.gui.components.AbstractWidget;
 *///?}
 
@@ -19,8 +26,45 @@ public class TooltipMixins {
     /**
      * Attaches a tooltip to the overlay handling screen
      */
-    //? if >=1.20.3 {
-    // 1.20.3 moved the attach point off AbstractWidget onto the tooltip itself.
+    //? if >=1.20.5 {
+    // 1.20.5 moved the attach point and the positioner choice onto WidgetTooltipHolder.
+    @Mixin(WidgetTooltipHolder.class)
+    public static class TooltipScreenMixin {
+
+        @Shadow
+        private Tooltip tooltip;
+
+        @Redirect(
+                method = "refreshTooltipForNextRenderPass",
+                at = @At(
+                        value = "FIELD",
+                        target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;"
+                )
+        )
+        private Screen visor$redirectMinecraftScreen(Minecraft minecraftInstance) {
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
+            if (overlay != null) {
+                return overlay;
+            }
+            return minecraftInstance.screen;
+        }
+
+        // McButton wraps its tooltip to carry the positioner it wants
+        @ModifyExpressionValue(
+                method = "refreshTooltipForNextRenderPass",
+                at = @At(
+                        value = "INVOKE",
+                        target = "Lnet/minecraft/client/gui/components/WidgetTooltipHolder;createTooltipPositioner(Lnet/minecraft/client/gui/navigation/ScreenRectangle;ZZ)Lnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;"
+                )
+        )
+        private ClientTooltipPositioner visor$widgetTooltipPositioner(ClientTooltipPositioner original) {
+            return this.tooltip instanceof McButton.PositionedTooltip positioned
+                    ? positioned.positioner()
+                    : original;
+        }
+    }
+    //?} elif >=1.20.3 {
+    /*// 1.20.3 moved the attach point off AbstractWidget onto the tooltip itself.
     @Mixin(Tooltip.class)
     public static class TooltipScreenMixin {
 
@@ -39,7 +83,7 @@ public class TooltipMixins {
             return minecraftInstance.screen;
         }
     }
-    //?} else {
+    *///?} else {
     /*@Mixin(AbstractWidget.class)
     public static class TooltipScreenMixin {
 

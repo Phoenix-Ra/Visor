@@ -1,5 +1,7 @@
 package org.vmstudio.visor.mixin.client.player;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
+
 import net.minecraft.util.Mth;
 import org.vmstudio.visor.api.client.input.HapticFeedback;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -201,7 +203,8 @@ public abstract class LocalPlayerMixin extends Common_PlayerMixin implements Loc
             boolean smartBlocked = visor$isApproachingInteractable(this.getDeltaMovement());
             this.visor$stepUpRaised = this.getBlockJumpFactor() == 1.0F
                     && !smartBlocked;
-            this.setMaxUpStep(
+            McVersionUtils.setStepHeight(
+                    (LocalPlayer) (Object) this,
                     this.visor$stepUpRaised
                             ? 1.0F : 0.6F
             );
@@ -232,7 +235,7 @@ public abstract class LocalPlayerMixin extends Common_PlayerMixin implements Loc
     private void visor$releaseWalkUp() {
         if (this.visor$stepUpRaised) {
             // 0.6F is from LivingEntity's constructor
-            this.setMaxUpStep(0.6F);
+            McVersionUtils.setStepHeight((LocalPlayer) (Object) this, 0.6F);
             this.visor$stepUpRaised = false;
         }
     }
@@ -426,9 +429,9 @@ public abstract class LocalPlayerMixin extends Common_PlayerMixin implements Loc
         }
 
         BlockState blockAboveNoise = this.level().getBlockState(blockforNoise.above());
-        SoundType soundType = block.getSoundType(blockNoise);
+        SoundType soundType = blockNoise.getSoundType();
         if (blockAboveNoise.getBlock() == Blocks.SNOW) {
-            soundType = Blocks.SNOW.getSoundType(blockAboveNoise);
+            soundType = blockAboveNoise.getSoundType();
         }
 
         SoundEvent soundevent = soundType.getStepSound();

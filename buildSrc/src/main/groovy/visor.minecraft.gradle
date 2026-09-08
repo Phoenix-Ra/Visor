@@ -108,6 +108,7 @@ project.ext.resourcePlaceholders = [
         mod_license                      : mod_license,
         minecraft_version                : minecraftVersion,
         java_version                     : java_version,
+        mixin_compat_level               : mixin_compat_level,
         pack_format                      : pack_format,
         fabric_loader_version            : fabric_loader_version,
         fabric_loader_version_range      : fabric_loader_version_range,

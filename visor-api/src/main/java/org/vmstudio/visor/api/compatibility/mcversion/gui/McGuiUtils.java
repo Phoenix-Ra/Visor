@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -60,6 +61,18 @@ public class McGuiUtils {
         //?}
     }
 
+
+    // ------- CHAT -------
+
+    public static void renderChat(ChatComponent chat,
+                                  GuiGraphics guiGraphics,
+                                  int tickCount, int mouseX, int mouseY) {
+        //? if >=1.20.5 {
+        chat.render(guiGraphics, tickCount, mouseX, mouseY, false);
+        //?} else {
+        /*chat.render(guiGraphics, tickCount, mouseX, mouseY);
+        *///?}
+    }
 
     // ------- INPUT -------
     // classic signatures, forwarded to whatever the version expects

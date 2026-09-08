@@ -46,10 +46,13 @@ public abstract class WinScreenMixin extends Screen {
                 .build());
     }
 
-    @Redirect(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;blendFunc(Lcom/mojang/blaze3d/platform/GlStateManager$SourceFactor;Lcom/mojang/blaze3d/platform/GlStateManager$DestFactor;)V"), method = "render")
+    // 1.20.5 render() no longer sets the blend func itself
+    //? if <1.20.5 {
+    /*@Redirect(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;blendFunc(Lcom/mojang/blaze3d/platform/GlStateManager$SourceFactor;Lcom/mojang/blaze3d/platform/GlStateManager$DestFactor;)V"), method = "render")
     private void visor$keepAlpha(GlStateManager.SourceFactor sourceFactor, GlStateManager.DestFactor destFactor) {
         RenderSystem.blendFuncSeparate(sourceFactor, destFactor, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
     }
+    *///?}
 
 
     //? if >=1.20.2 {
@@ -64,7 +67,16 @@ public abstract class WinScreenMixin extends Screen {
             ci.cancel();
         }
     }
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIFFIIII)V"), method = "render")
+    //? if >=1.20.5 {
+    // 1.20.5 moved the vignette blit into its own method
+    @Inject(at = @At("HEAD"), method = "renderVignette", cancellable = true)
+    private void visor$noVignette(GuiGraphics guiGraphics, CallbackInfo ci) {
+        if (VisorState.get().isActive()) {
+            ci.cancel();
+        }
+    }
+    //?} else {
+    /*@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIFFIIII)V"), method = "render")
     private void visor$noVignette(GuiGraphics instance,
                                   ResourceLocation texture,
                                   int x, int y, int blitOffset,
@@ -75,4 +87,5 @@ public abstract class WinScreenMixin extends Screen {
             instance.blit(texture, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
         }
     }
+    *///?}
 }

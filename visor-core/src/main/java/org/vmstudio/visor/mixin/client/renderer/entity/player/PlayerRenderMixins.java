@@ -1,6 +1,6 @@
 package org.vmstudio.visor.mixin.client.renderer.entity.player;
 
-import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -62,7 +62,7 @@ public class PlayerRenderMixins {
                 if(vrPlayer == null){
                     return;
                 }
-                String modelName = McVersionClientUtils.getModelName(player);
+                String modelName = McRenderUtils.getModelName(player);
                 var model = vrPlayer.getBodyType().getRenderer().getModelRenderer(
                         vrPlayer, modelName
                 );

@@ -8,9 +8,9 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositione
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
-//? if >=1.20.3 {
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-//?}
+//? if >=1.20.3 && <1.20.5 {
+/*import net.minecraft.client.gui.navigation.ScreenRectangle;
+*///?}
 
 /**
  * Cross-mc-version adapter for AbstractButton
@@ -57,7 +57,8 @@ public abstract class McButton extends AbstractButton {
         return tooltipSource != null ? tooltipSource : super.getTooltip();
     }
 
-    private static final class PositionedTooltip extends Tooltip {
+    // 1.20.5 moved the positioner choice onto WidgetTooltipHolder, see TooltipMixins
+    public static final class PositionedTooltip extends Tooltip {
 
         private final ClientTooltipPositioner positioner;
 
@@ -66,12 +67,18 @@ public abstract class McButton extends AbstractButton {
             this.positioner = positioner;
         }
 
-        @Override
+        public ClientTooltipPositioner positioner() {
+            return positioner;
+        }
+
+        //? if <1.20.5 {
+        /*@Override
         protected ClientTooltipPositioner createTooltipPositioner(boolean hovering,
                                                                   boolean focused,
                                                                   ScreenRectangle rectangle) {
             return positioner;
         }
+        *///?}
     }
     //?} else {
     /*@Override

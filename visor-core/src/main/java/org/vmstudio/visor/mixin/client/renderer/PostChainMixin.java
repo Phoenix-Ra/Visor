@@ -9,7 +9,11 @@ import org.vmstudio.visor.core.client.render.target.MultiCameraRenderTarget;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
+//? if >=1.20.5 {
+import net.minecraft.server.packs.resources.ResourceProvider;
+//?} else {
+/*import net.minecraft.server.packs.resources.ResourceManager;
+*///?}
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,11 +38,19 @@ public class PostChainMixin {
 
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
+    //? if >=1.20.5 {
     private void visor$onInit(TextureManager textureManager,
-                              ResourceManager resourceManager,
+                              ResourceProvider resourceProvider,
                               RenderTarget screenTarget,
                               ResourceLocation name,
                               CallbackInfo ci) throws IOException, JsonSyntaxException {
+    //?} else {
+    /*private void visor$onInit(TextureManager textureManager,
+                              ResourceManager resourceProvider,
+                              RenderTarget screenTarget,
+                              ResourceLocation name,
+                              CallbackInfo ci) throws IOException, JsonSyntaxException {
+    *///?}
 
         if (VisorState.get().isNotInitialized()
                 || this.screenTarget != VRRenderState.getVanillaTarget()){
@@ -52,7 +64,7 @@ public class PostChainMixin {
             visor$vrPostChains.put(renderPass,
                     new PostChain(
                             textureManager,
-                            resourceManager,
+                            resourceProvider,
                             target,
                             name
                     )

@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.provider;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -49,7 +51,7 @@ public class VisorScene implements AtumVRScene {
         var profiler =  renderContext.profiler();
 
         // pop pose pushed in onGameRenderStart method
-        RenderSystem.getModelViewStack().popPose();
+        McModelViewStack.pop();
 
 
         RenderSystem.depthMask(true);
@@ -107,9 +109,8 @@ public class VisorScene implements AtumVRScene {
     }
 
     private void renderOverlaysAfterPostProcessing(RenderContext context) {
-        PoseStack modelView = RenderSystem.getModelViewStack();
-        modelView.pushPose();
-        modelView.setIdentity();
+        McModelViewStack.push();
+        McModelViewStack.identity();
         RenderSystem.applyModelViewMatrix();
 
         Matrix4f projection = RenderSystem.getProjectionMatrix();
@@ -118,7 +119,7 @@ public class VisorScene implements AtumVRScene {
             ClientContext.decorationRenderer.renderAfterPostProcessing(new PoseStack(), context.partialTicks());
         } finally {
             RenderSystem.setProjectionMatrix(projection, vertexSorting);
-            modelView.popPose();
+            McModelViewStack.pop();
             RenderSystem.applyModelViewMatrix();
         }
 
@@ -184,12 +185,11 @@ public class VisorScene implements AtumVRScene {
 
         if (ShaderCompatHelper.isShaderActive()) {
             MC.mainRenderTarget.bindWrite(true);
-            PoseStack modelView = RenderSystem.getModelViewStack();
-            modelView.pushPose();
-            modelView.setIdentity();
+            McModelViewStack.push();
+            McModelViewStack.identity();
             RenderSystem.applyModelViewMatrix();
             ClientContext.decorationRenderer.renderShaderUi(new PoseStack(), context.partialTicks());
-            modelView.popPose();
+            McModelViewStack.pop();
             RenderSystem.applyModelViewMatrix();
         }
 

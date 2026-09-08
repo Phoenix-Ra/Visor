@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -134,7 +136,7 @@ public class RenderEffectsHelper {
         RenderTarget target = Minecraft.getInstance().getMainRenderTarget();
 
         RenderSystem.backupProjectionMatrix();
-        RenderSystem.getModelViewStack().pushPose();
+        McModelViewStack.push();
 
         try {
             beginStencilWrite();
@@ -145,7 +147,7 @@ public class RenderEffectsHelper {
 
             drawMaskTriangles(mask);
         } finally {
-            RenderSystem.getModelViewStack().popPose();
+            McModelViewStack.pop();
             RenderSystem.applyModelViewMatrix();
             RenderSystem.restoreProjectionMatrix();
 

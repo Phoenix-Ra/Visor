@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.player;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
+
 import lombok.Getter;
 
 import lombok.Setter;
@@ -314,7 +316,8 @@ public class VRLocalPlayerImpl implements VRLocalPlayer {
 
         if (canAutoClimb && player.fallDistance == 0.0F) {
             // Reduce the collision box width for climbing checks.
-            float climbShrink = player.getDimensions(player.getPose()).width * 0.45F;
+            float climbShrink = McVersionUtils.dimensionsWidth(
+                    player.getDimensions(player.getPose())) * 0.45F;
             double climbShrinkHalfWidth = playerHalfWidth - climbShrink;
 
             AABB collisionBoxClimb = new AABB(

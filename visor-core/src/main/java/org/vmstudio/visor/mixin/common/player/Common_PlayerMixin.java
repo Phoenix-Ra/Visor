@@ -9,7 +9,9 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.Holder;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -207,9 +209,15 @@ public abstract class Common_PlayerMixin extends Common_LivingEntityMixin
     }
 
     //ATTACK_DAMAGE attribute for offhand
+    //? if >=1.20.5 {
     @WrapOperation(method = "attack", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/player/Player;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
+    private double visor$attackDamage(Player self, Holder<Attribute> attribute, Operation<Double> original) {
+    //?} else {
+    /*@WrapOperation(method = "attack", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;getAttributeValue(Lnet/minecraft/world/entity/ai/attributes/Attribute;)D"))
     private double visor$attackDamage(Player self, Attribute attribute, Operation<Double> original) {
+    *///?}
         VRPlayer vrPlayer = VisorAPI.getVRPlayer(self);
         if (vrPlayer == null) {
             return original.call(self, attribute);
@@ -276,14 +284,10 @@ public abstract class Common_PlayerMixin extends Common_LivingEntityMixin
 
         // Strip mainhand modifiers, apply offhand modifiers as if it were mainhand
         if (!main.isEmpty()) {
-            self.getAttributes().removeAttributeModifiers(
-                    main.getAttributeModifiers(EquipmentSlot.MAINHAND)
-            );
+            McVersionUtils.removeItemAttributeModifiers(self, main, EquipmentSlot.MAINHAND);
         }
         if (!off.isEmpty()) {
-            self.getAttributes().addTransientAttributeModifiers(
-                    off.getAttributeModifiers(EquipmentSlot.MAINHAND)
-            );
+            McVersionUtils.addItemAttributeModifiers(self, off, EquipmentSlot.MAINHAND);
         }
 
         try {
@@ -291,14 +295,10 @@ public abstract class Common_PlayerMixin extends Common_LivingEntityMixin
         } finally {
             // Always restore, even if action.get() threw
             if (!off.isEmpty()) {
-                self.getAttributes().removeAttributeModifiers(
-                        off.getAttributeModifiers(EquipmentSlot.MAINHAND)
-                );
+                McVersionUtils.removeItemAttributeModifiers(self, off, EquipmentSlot.MAINHAND);
             }
             if (!main.isEmpty()) {
-                self.getAttributes().addTransientAttributeModifiers(
-                        main.getAttributeModifiers(EquipmentSlot.MAINHAND)
-                );
+                McVersionUtils.addItemAttributeModifiers(self, main, EquipmentSlot.MAINHAND);
             }
         }
     }

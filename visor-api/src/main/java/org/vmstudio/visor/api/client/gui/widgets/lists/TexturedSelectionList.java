@@ -184,7 +184,7 @@ public class TexturedSelectionList extends McSelectionList<TexturedSelectionList
         }
 
         this.enableScissor(guiGraphics);
-        this.renderList(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderRows(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.disableScissor();
 
         int scrollX = this.getScrollbarPosition();

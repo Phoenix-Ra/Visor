@@ -23,6 +23,9 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
+//? if >=1.20.5 {
+import net.minecraft.client.gui.screens.ReceivingLevelScreen;
+//?}
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -417,7 +420,13 @@ public abstract class MinecraftMixin implements MinecraftExtension {
      * @param info         s
      */
     @Inject(at = @At("HEAD"), method = "setLevel")
-    public void visor$onLevelChange(ClientLevel pLevelClient, CallbackInfo info) {
+    //? if >=1.20.5 {
+    public void visor$onLevelChange(ClientLevel pLevelClient,
+                                    ReceivingLevelScreen.Reason reason,
+                                    CallbackInfo info) {
+    //?} else {
+    /*public void visor$onLevelChange(ClientLevel pLevelClient, CallbackInfo info) {
+    *///?}
         if (VisorState.get().isActive()) {
             ClientContext.localPlayer.setOrigin(
                     0.0f, 0.0f, 0.0f, true

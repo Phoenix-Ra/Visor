@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.mainmenu;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.GameRenderer;
@@ -29,7 +31,7 @@ public final class VRMenuFloor {
             float length = area.y + i * 2;
 
             poseStack.pushPose();
-            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            RenderSystem.setShader(McRenderUtils.positionTexColorNormalShader());
             RenderSystem.setShaderTexture(0, floorTexture);
 
             int r = 128, g = 128, b = 128;

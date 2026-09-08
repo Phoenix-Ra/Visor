@@ -15,6 +15,8 @@ atumvr_version        = "1.14.0beta-snapshot#23"
 atumconfig_version    = "1.2.0pre3"
 lwjgl_version         = "3.3.6"
 mixin_extras_version  = "0.4.1"
+# Forge 50 and NeoForge 20.6 ship Mixin 0.8.5, which knows no level above JAVA_18
+mixin_compat_level    = 17
 lombok_version        = "1.18.46"
 jetbrains_annotations_version = "26.1.0"
 
@@ -23,6 +25,7 @@ jetbrains_annotations_version = "26.1.0"
 "1.20.1" = ["fabric", "forge"]
 "1.20.2" = ["fabric", "forge", "neoforge"]
 "1.20.4" = ["fabric", "forge", "neoforge"]
+"1.20.6" = ["fabric", "forge", "neoforge"]
 
 # ---- Version dependencies ---------------------------------------------------------------------
 ["1.20.1"]
@@ -67,3 +70,18 @@ neoforge_version = "20.4.251"
 neoforge_version_range = "[20.4,)"
 sodium_version = "mc1.20.4-0.5.8"
 iris_version = "1.7.2+1.20.4"
+
+["1.20.6"]
+# 1.20.5 - 1.20.6
+java_version = 21
+pack_format = 32
+minecraft_version_range_fabric = ">=1.20.5 <1.21"
+minecraft_version_range_forgelike = "[1.20.5,1.20.6]"
+parchment_version = "2024.06.16"
+fabric_api_version = "0.100.8"
+forge_version = "50.2.10"
+forge_version_range = "[50,)"
+neoforge_version = "20.6.141"
+neoforge_version_range = "[20.6,)"
+sodium_version = "mc1.20.6-0.5.11"
+iris_version = "1.7.2+1.20.6"

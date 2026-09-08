@@ -168,24 +168,33 @@ public class VRPlayerRendererFull extends PlayerRenderer {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
+    //? if >=1.20.5 {
     @Override
+    protected void setupRotations(
+            AbstractClientPlayer player, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTick, float scale)
+    {
+    //?} else {
+    /*@Override
     protected void setupRotations(
             AbstractClientPlayer player, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTick)
     {
+    *///?}
         if (VRRenderState.getPhase().isVRGui()) {
             if (player.isFallFlying() || player.isVisuallySwimming() || player.isAutoSpinAttack()) {
                 poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - rotationYaw));
                 return;
             }
-            super.setupRotations(player, poseStack, ageInTicks, rotationYaw, partialTick);
-            return;
+        } else {
+            var vrPlayer = VRClientPlayers.getPlayer(player.getUUID());
+            if (vrPlayer != null) {
+                rotationYaw = vrPlayer.getPoseData(PlayerPoseType.RENDER).getBodyYaw() * Mth.RAD_TO_DEG;
+            }
         }
 
-        var vrPlayer = VRClientPlayers.getPlayer(player.getUUID());
-        if (vrPlayer != null) {
-            rotationYaw = vrPlayer.getPoseData(PlayerPoseType.RENDER).getBodyYaw() * Mth.RAD_TO_DEG;
-        }
-
-        super.setupRotations(player, poseStack, ageInTicks, rotationYaw, partialTick);
+        //? if >=1.20.5 {
+        super.setupRotations(player, poseStack, ageInTicks, rotationYaw, partialTick, scale);
+        //?} else {
+        /*super.setupRotations(player, poseStack, ageInTicks, rotationYaw, partialTick);
+        *///?}
     }
 }

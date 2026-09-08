@@ -100,12 +100,22 @@ public abstract class TitleScreenMixin extends Screen {
         }
     }
 
-    @ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"), method = "render", index = 1)
+
+    //? if >=1.20.5 {
+    @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
+    public void visor$noPanorama(CallbackInfo ci) {
+        if (VisorState.get().isActive()) {
+            ci.cancel();
+        }
+    }
+    //?} else {
+    /*@ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"), method = "render", index = 1)
     public float visor$noPanorama(float alpha) {
         return VisorState.get().isActive()
                 ? 0.0F
                 : alpha;
     }
+    *///?}
 
     @Unique
     private void visor$addVRModeButton() {

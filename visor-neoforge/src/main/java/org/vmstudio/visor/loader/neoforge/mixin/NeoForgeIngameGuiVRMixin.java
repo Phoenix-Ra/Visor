@@ -7,15 +7,41 @@ import org.vmstudio.visor.core.client.VisorState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
-import net.neoforged.neoforge.client.gui.overlay.ExtendedGui;
+//? if >=1.20.5 {
+import net.minecraft.client.gui.Gui;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+//?} else {
+/*import net.neoforged.neoforge.client.gui.overlay.ExtendedGui;
 import net.neoforged.neoforge.client.gui.overlay.NamedGuiOverlay;
 import net.neoforged.neoforge.client.gui.overlay.VanillaGuiOverlay;
+*///?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ExtendedGui.class)
+//? if >=1.20.5 {
+// 1.20.5 dropped the overlay system; NeoForge splits renderPlayerHealth into its own layers,
+// everything else is covered by the vanilla GuiMixin
+@Mixin(Gui.class)
+public abstract class NeoForgeIngameGuiVRMixin {
+
+    @Inject(method = {"renderHealthLevel", "renderArmorLevel", "renderFoodLevel", "renderAirLevel"},
+            at = @At("HEAD"), remap = false, cancellable = true)
+    private void visor$noHudElements(GuiGraphics guiGraphics, CallbackInfo ci) {
+        if (VisorState.get().isNotActive()) {
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen == null
+                && ClientContext.visor.isFeatureDisabled(ClientFeature.GUI_DISABLE_HUD)) {
+            return;
+        }
+        ci.cancel();
+    }
+}
+//?} else {
+/*@Mixin(ExtendedGui.class)
 public abstract class NeoForgeIngameGuiVRMixin {
 
 
@@ -62,3 +88,4 @@ public abstract class NeoForgeIngameGuiVRMixin {
     }
 
 }
+*///?}

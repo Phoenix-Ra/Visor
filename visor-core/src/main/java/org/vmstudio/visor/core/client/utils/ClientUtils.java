@@ -6,7 +6,6 @@ import com.mojang.realmsclient.RealmsMainScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -129,7 +128,7 @@ public class ClientUtils {
         }
         if (bl) {
             McVersionClientUtils.clearLevel(minecraft,
-                    new GenericDirtMessageScreen(Component.translatable("visor.messages.saving_world", message)));
+                    McVersionClientUtils.savingLevelScreen(Component.translatable("visor.messages.saving_world", message)));
         } else {
             McVersionClientUtils.clearLevel(minecraft);
         }

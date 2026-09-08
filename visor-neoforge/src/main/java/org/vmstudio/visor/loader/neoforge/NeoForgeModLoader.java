@@ -35,15 +35,25 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.fml.loading.moddiscovery.ModFileInfo;
 import net.neoforged.neoforgespi.language.IModFileInfo;
 import net.neoforged.neoforgespi.language.ModFileScanData;
-//? if >=1.20.4 {
+//? if >=1.20.5 {
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+//?} elif >=1.20.4 {
+/*import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
 import net.neoforged.neoforge.network.handling.PlayPayloadContext;
-//?} else {
+*///?} else {
 /*import net.neoforged.neoforge.network.INetworkDirection;
 import net.neoforged.neoforge.network.PlayNetworkDirection;
 *///?}
@@ -116,7 +126,33 @@ public class NeoForgeModLoader implements ModLoader {
 
     @Override
     public double getItemEntityReach(double baseRange, ItemStack itemStack, EquipmentSlot slot) {
-        Collection<AttributeModifier> attributes = itemStack.getAttributeModifiers(slot)
+        //? if >=1.20.5 {
+        // 1.20.5 replaced NeoForgeMod.ENTITY_REACH with vanilla ENTITY_INTERACTION_RANGE
+        Collection<AttributeModifier> attributes = new ArrayList<>();
+        itemStack.forEachModifier(slot, (attribute, modifier) -> {
+            if (attribute == Attributes.ENTITY_INTERACTION_RANGE) {
+                attributes.add(modifier);
+            }
+        });
+        for (AttributeModifier entry : attributes) {
+            if (entry.operation() == AttributeModifier.Operation.ADD_VALUE) {
+                baseRange += entry.amount();
+            }
+        }
+        double totalRange = baseRange;
+        for (AttributeModifier entry : attributes) {
+            if (entry.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE) {
+                totalRange += baseRange * entry.amount();
+            }
+        }
+        for (AttributeModifier entry : attributes) {
+            if (entry.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
+                totalRange *= 1.0 + entry.amount();
+            }
+        }
+        return totalRange;
+        //?} else {
+        /*Collection<AttributeModifier> attributes = itemStack.getAttributeModifiers(slot)
                 // NeoForge exposes this as a Holder, Forge as a RegistryObject
                 .get(NeoForgeMod.ENTITY_REACH.value());
         for (AttributeModifier entry : attributes) {
@@ -136,6 +172,7 @@ public class NeoForgeModLoader implements ModLoader {
             }
         }
         return totalRange;
+        *///?}
     }
 
     @Override
@@ -219,9 +256,11 @@ public class NeoForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToClient payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        //? if >=1.20.4 {
-        return new ClientboundCustomPayloadPacket(new RawPayload(channelId, buffer));
-        //?} else {
+        //? if >=1.20.5 {
+        return new ClientboundCustomPayloadPacket(RawPayload.of(channelId, buffer));
+        //?} elif >=1.20.4 {
+        /*return new ClientboundCustomPayloadPacket(new RawPayload(channelId, buffer));
+        *///?} else {
         /*return PlayNetworkDirection.PLAY_TO_CLIENT.buildPacket(
                 new INetworkDirection.PacketData(buffer, 0), channelId);
         *///?}
@@ -232,9 +271,11 @@ public class NeoForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToServer payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        //? if >=1.20.4 {
-        return new ServerboundCustomPayloadPacket(new RawPayload(channelId, buffer));
-        //?} else {
+        //? if >=1.20.5 {
+        return new ServerboundCustomPayloadPacket(RawPayload.of(channelId, buffer));
+        //?} elif >=1.20.4 {
+        /*return new ServerboundCustomPayloadPacket(new RawPayload(channelId, buffer));
+        *///?} else {
         /*return PlayNetworkDirection.PLAY_TO_SERVER.buildPacket(
                 new INetworkDirection.PacketData(buffer, 0), channelId);
         *///?}
@@ -257,8 +298,63 @@ public class NeoForgeModLoader implements ModLoader {
 
     // ----- INNER -----
 
-    //? if >=1.20.4 {
-    void registerPayloads(@NotNull RegisterPayloadHandlerEvent event) {
+    //? if >=1.20.5 {
+    void registerPayloads(@NotNull RegisterPayloadHandlersEvent event) {
+        for (VisorChannel channel : pendingChannels) {
+            ResourceLocation channelId = channel.getChannelId();
+            CustomPacketPayload.Type<RawPayload> type = new CustomPacketPayload.Type<>(channelId);
+            event.registrar(channelId.getNamespace())
+                    .optional()
+                    .playBidirectional(type, RawPayload.codec(type),
+                            (payload, context) -> handlePayload(channel, payload, context));
+        }
+        pendingChannels.clear();
+    }
+
+    private static void handlePayload(VisorChannel channel,
+                                      RawPayload payload,
+                                      IPayloadContext context) {
+        FriendlyByteBuf buffer = payload.buffer();
+        if (context.flow() == PacketFlow.SERVERBOUND) {
+            if (channel.hasPacketsToServer()
+                    && context.player() instanceof ServerPlayer sender) {
+                context.enqueueWork(() -> channel.handleToServer(buffer, sender,
+                        p -> context.reply(RawPayload.of(channel.getChannelId(), p))));
+            }
+        } else {
+            if (channel.hasPacketsToClient()) {
+                context.enqueueWork(() -> channel.handleToClient(buffer));
+            }
+        }
+    }
+
+
+    private record RawPayload(CustomPacketPayload.Type<RawPayload> type, FriendlyByteBuf buffer)
+            implements CustomPacketPayload {
+
+        private static StreamCodec<FriendlyByteBuf, RawPayload> codec(
+                CustomPacketPayload.Type<RawPayload> type) {
+            return CustomPacketPayload.codec(
+                    (payload, target) -> target.writeBytes(payload.buffer().slice()),
+                    source -> {
+                        FriendlyByteBuf copy = new FriendlyByteBuf(Unpooled.buffer());
+                        copy.writeBytes(source, source.readableBytes());
+                        return new RawPayload(type, copy);
+                    });
+        }
+
+        private static RawPayload of(ResourceLocation id, FriendlyByteBuf buffer) {
+            return new RawPayload(new CustomPacketPayload.Type<>(id), buffer);
+        }
+
+        private static RawPayload of(ResourceLocation id, VisorPayloadToClient payload) {
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+            payload.write(buffer);
+            return of(id, buffer);
+        }
+    }
+    //?} elif >=1.20.4 {
+    /*void registerPayloads(@NotNull RegisterPayloadHandlerEvent event) {
         for (VisorChannel channel : pendingChannels) {
             ResourceLocation channelId = channel.getChannelId();
             event.registrar(channelId.getNamespace())
@@ -309,7 +405,7 @@ public class NeoForgeModLoader implements ModLoader {
             target.writeBytes(buffer.slice());
         }
     }
-    //?}
+    *///?}
 
     private void onRenderLevelStage(RenderLevelStageEvent event) {
         RenderPipelineStage stage = mapForgeStage(event.getStage());

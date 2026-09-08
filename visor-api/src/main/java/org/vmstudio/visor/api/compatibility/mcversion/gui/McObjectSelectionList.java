@@ -48,6 +48,14 @@ public abstract class McObjectSelectionList<E extends ObjectSelectionList.Entry<
     }
 
 
+    // 1.20.5 dropped the flag, the background moved to renderListBackground
+    public void setRenderBackground(boolean render) {
+        //? if <1.20.5 {
+        /*super.setRenderBackground(render);
+        *///?}
+    }
+
+
     protected final int listLeft() {
         //? if >=1.20.3 {
         return getX();

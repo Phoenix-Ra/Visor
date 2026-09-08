@@ -38,9 +38,15 @@ public class EntityRendererMixin {
     }
 
     @Inject(method = "renderNameTag", at = @At("HEAD"), cancellable = true)
+    //? if >=1.20.5 {
     private void visor$hideSpectatedVRNameTag(Entity entity, Component displayName,
                                                 PoseStack poseStack, MultiBufferSource buffer,
+                                                int packedLight, float partialTick, CallbackInfo ci) {
+    //?} else {
+    /*private void visor$hideSpectatedVRNameTag(Entity entity, Component displayName,
+                                                PoseStack poseStack, MultiBufferSource buffer,
                                                 int packedLight, CallbackInfo ci) {
+    *///?}
         if (VRRenderState.isSpectatedVRView(entity)) {
             ci.cancel();
         }

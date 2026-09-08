@@ -1,6 +1,8 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import org.vmstudio.visor.mixin.client.accessors.RenderSystemAccessor;
 import org.vmstudio.visor.api.client.player.pose.VRPlayerPoseClient;
 import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
@@ -31,33 +33,62 @@ public class RenderPoseHelper {
 
     public static void applyCameraOrientation(VRRenderPass renderPass,
                                               PoseStack poseStack) {
+        Matrix4f rotationMatrix = getViewRotation(renderPass);
+
+        // apply to both blockPos & normal
+        poseStack.last().pose().mul(rotationMatrix);
+        poseStack.last().normal().mul(new Matrix3f(rotationMatrix));
+    }
+
+    // 1.20.5 renderLevel carries the view rotation as a plain frustum matrix
+    public static void applyCameraOrientation(VRRenderPass renderPass,
+                                              Matrix4f frustumMatrix) {
+        frustumMatrix.mul(getViewRotation(renderPass));
+    }
+
+    //? if >=1.20.5 {
+    public static Vector3f[] applyEyeSpaceLevelLights(VRRenderPass renderPass) {
+        Vector3f[] uploaded = RenderSystemAccessor.getShaderLightDirections();
+        Vector3f[] worldSpace = {
+                new Vector3f(uploaded[0]),
+                new Vector3f(uploaded[1])
+        };
+
+        Matrix4f view = getViewRotation(renderPass);
+        RenderSystem.setShaderLights(
+                view.transformDirection(new Vector3f(worldSpace[0])),
+                view.transformDirection(new Vector3f(worldSpace[1]))
+        );
+        return worldSpace;
+    }
+
+    public static void restoreLevelLights(Vector3f[] worldSpace) {
+        RenderSystem.setShaderLights(worldSpace[0], worldSpace[1]);
+    }
+    //?}
+
+    public static Matrix4f getViewRotation(VRRenderPass renderPass) {
         float mirrorSmooth = VRClientSettings.getMirrorSmooth();
 
         LocalPlayerPose renderPose = ClientContext.localPlayer.getPoseData(PlayerPoseType.RENDER);
-        final Matrix4f rotationMatrix;
 
         boolean smooth = renderPass == VRRenderPass.CENTER && mirrorSmooth > 0f;
         if (smooth) {
 
             // average rotation over history
-            rotationMatrix = new Matrix4f()
+            return new Matrix4f()
                     .rotation(
                             ClientContext.rawPoseHandler
                                     .getHmdData()
                                     .getRotationHistory()
                                     .averageRotation(mirrorSmooth)
                     );
-        } else {
-            // direct VR eye/head rotation
-            rotationMatrix = renderPose
-                    .getCameraPose(renderPass)
-                    .getRotation()
-                    .transpose(new Matrix4f());
         }
-
-        // apply to both blockPos & normal
-        poseStack.last().pose().mul(rotationMatrix);
-        poseStack.last().normal().mul(new Matrix3f(rotationMatrix));
+        // direct VR eye/head rotation
+        return renderPose
+                .getCameraPose(renderPass)
+                .getRotation()
+                .transpose(new Matrix4f());
     }
 
     public static void applyCameraTranslation(VRRenderPass renderPass,

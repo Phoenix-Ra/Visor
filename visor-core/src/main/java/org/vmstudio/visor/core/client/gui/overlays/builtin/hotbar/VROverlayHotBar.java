@@ -316,8 +316,8 @@ public class VROverlayHotBar extends VROverlayRadialSelector
 
         MutableComponent itemName = Component.empty()
                 .append(itemStack.getHoverName())
-                .withStyle(itemStack.getRarity().color);
-        if (itemStack.hasCustomHoverName()) {
+                .withStyle(McVersionUtils.rarityColor(itemStack.getRarity()));
+        if (McVersionUtils.hasCustomHoverName(itemStack)) {
             itemName.withStyle(ChatFormatting.ITALIC);
         }
 

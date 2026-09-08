@@ -1,5 +1,7 @@
 package org.vmstudio.visor.mixin.common.player;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
+
 import me.phoenixra.atumconfig.api.tuples.PairRecord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -179,8 +181,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeE
         VRServerPlayer vrPlayer = VisorAPI.server().getVRPlayer(player);
         if (vrPlayer == null) return;
 
-        double dist = this.player.getEyePosition().distanceToSqr(Vec3.atCenterOf(blockPos));
-        if (dist > ServerGamePacketListenerImpl.MAX_INTERACTION_DISTANCE) {
+        if (!McVersionUtils.canInteractWithBlock(this.player, blockPos)) {
             this.debugLogging(blockPos, false, j, "too far");
             return;
         } else if (blockPos.getY() >= i) {

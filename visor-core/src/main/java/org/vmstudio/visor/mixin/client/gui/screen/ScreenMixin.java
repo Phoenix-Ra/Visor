@@ -35,4 +35,14 @@ public abstract class ScreenMixin extends AbstractContainerEventHandler implemen
         }
 
     }
+
+    //? if >=1.20.5 {
+    @Inject(method = {"renderTransparentBackground", "renderPanorama", "renderBlurredBackground"},
+            at = @At("HEAD"), cancellable = true)
+    public void visor$noScreenBackdrop(CallbackInfo ci) {
+        if (VisorState.get().isActive()) {
+            ci.cancel();
+        }
+    }
+    //?}
 }

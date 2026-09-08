@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.gui;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
+
 import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -105,10 +107,9 @@ public class VROverlayManagerImpl implements VROverlayManager {
 
         RenderSystem.backupProjectionMatrix();
 
-        PoseStack posestack = RenderSystem.getModelViewStack();
-        posestack.pushPose();
-        posestack.setIdentity();
-        posestack.translate(0.0D, 0.0D, -11000.0D);
+        McModelViewStack.push();
+        McModelViewStack.identity();
+        McModelViewStack.translate(0.0F, 0.0F, -11000.0F);
         RenderSystem.applyModelViewMatrix();
         RenderSystem.blendFuncSeparate(
                 GlStateManager.SourceFactor.SRC_ALPHA,
@@ -172,7 +173,7 @@ public class VROverlayManagerImpl implements VROverlayManager {
         // --- Restore ---
         RenderSystem.restoreProjectionMatrix();
 
-        posestack.popPose();
+        McModelViewStack.pop();
 
     }
 

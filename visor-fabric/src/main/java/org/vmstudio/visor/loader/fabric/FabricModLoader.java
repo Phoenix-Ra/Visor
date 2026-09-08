@@ -20,6 +20,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
+//? if >=1.20.5 {
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+//?}
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -186,7 +191,27 @@ public class FabricModLoader implements ModLoader {
 
     @Override
     public void registerNetworkChannel(@NotNull VisorChannel channel) {
+        //? if >=1.20.5 {
+        CustomPacketPayload.Type<RawPayload> type = payloadType(channel.getChannelId());
+        StreamCodec<FriendlyByteBuf, RawPayload> codec = RawPayload.codec(type);
         if (channel.hasPacketsToServer()) {
+            PayloadTypeRegistry.playC2S().register(type, codec);
+            ServerPlayNetworking.registerGlobalReceiver(type, (payload, context) ->
+                    channel.handleToServer(
+                            payload.buffer(),
+                            context.player(),
+                            p -> context.responseSender().sendPacket(
+                                    ModLoader.get().createPacketToClient(channel.getChannelId(), p))
+                    ));
+        }
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT
+                && channel.hasPacketsToClient()) {
+            PayloadTypeRegistry.playS2C().register(type, codec);
+            ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) ->
+                    channel.handleToClient(payload.buffer()));
+        }
+        //?} else {
+        /*if (channel.hasPacketsToServer()) {
             ServerPlayNetworking.registerGlobalReceiver(channel.getChannelId(),
                     (server, player, handler, buffer, responseSender) -> {
                         // Copy the buffer immediately — Fabric reclaims it after this callback returns.
@@ -206,6 +231,7 @@ public class FabricModLoader implements ModLoader {
                         client.execute(() -> channel.handleToClient(copy));
                     });
         }
+        *///?}
     }
 
     @Override
@@ -213,7 +239,12 @@ public class FabricModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToClient payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        return ServerPlayNetworking.createS2CPacket(channelId, buffer);
+        //? if >=1.20.5 {
+        return ServerPlayNetworking.createS2CPacket(
+                new RawPayload(payloadType(channelId), buffer));
+        //?} else {
+        /*return ServerPlayNetworking.createS2CPacket(channelId, buffer);
+        *///?}
     }
 
     @Override
@@ -221,8 +252,35 @@ public class FabricModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToServer payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        return ClientPlayNetworking.createC2SPacket(channelId, buffer);
+        //? if >=1.20.5 {
+        return ClientPlayNetworking.createC2SPacket(
+                new RawPayload(payloadType(channelId), buffer));
+        //?} else {
+        /*return ClientPlayNetworking.createC2SPacket(channelId, buffer);
+        *///?}
     }
+
+    //? if >=1.20.5 {
+    private static CustomPacketPayload.Type<RawPayload> payloadType(ResourceLocation channelId) {
+        return new CustomPacketPayload.Type<>(channelId);
+    }
+
+    private record RawPayload(CustomPacketPayload.Type<RawPayload> type, FriendlyByteBuf buffer)
+            implements CustomPacketPayload {
+
+        private static StreamCodec<FriendlyByteBuf, RawPayload> codec(
+                CustomPacketPayload.Type<RawPayload> type) {
+            return CustomPacketPayload.codec(
+                    (payload, target) -> target.writeBytes(payload.buffer().slice()),
+                    source -> {
+                        // decoded off the game thread, the source buffer is reclaimed after this
+                        FriendlyByteBuf copy = new FriendlyByteBuf(Unpooled.buffer());
+                        copy.writeBytes(source, source.readableBytes());
+                        return new RawPayload(type, copy);
+                    });
+        }
+    }
+    //?}
 
 
     @Override

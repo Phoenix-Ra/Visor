@@ -1,6 +1,10 @@
 package org.vmstudio.visor.core.client.render.decoration;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import org.joml.Vector3f;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
+import org.vmstudio.visor.core.client.render.helpers.RenderPoseHelper;
 import lombok.Getter;
 import me.phoenixra.atumvr.api.utils.GLUtils;
 import org.vmstudio.visor.api.ModLoader;
@@ -63,48 +67,88 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
         //REGISTERING RENDERING PIPELINE
         ModLoader.get().addToRenderPipeline(
                 RenderPipelineStage.AFTER_SOLID,
-                (poseStack, partialTicks) -> {
+                (poseStack, partialTicks) -> runLevelStage(() -> {
                     if (VRRenderState.getPhase().isNotVanilla()) {
                         renderAfterSolid(poseStack, partialTicks);
                     }
                     callStageEvent(RenderPipelineStage.AFTER_SOLID, poseStack, partialTicks);
                     GLUtils.checkGLError("post AFTER_SOLID events stage");
-                }
+                })
         );
         ModLoader.get().addToRenderPipeline(
                 RenderPipelineStage.AFTER_TRANSLUCENT,
-                (poseStack, partialTicks) -> {
+                (poseStack, partialTicks) -> runLevelStage(() -> {
                     if (VRRenderState.getPhase().isNotVanilla()) {
                         renderAfterTranslucent(poseStack, partialTicks);
                     }
                     callStageEvent(RenderPipelineStage.AFTER_TRANSLUCENT, poseStack, partialTicks);
                     GLUtils.checkGLError("post AFTER_TRANSLUCENT events stage");
-                }
+                })
         );
         ModLoader.get().addToRenderPipeline(
                 RenderPipelineStage.AFTER_WORLD,
-                (poseStack, partialTicks) -> {
+                (poseStack, partialTicks) -> runLevelStage(() -> {
                     if (VRRenderState.getPhase().isNotVanilla()) {
                         renderAfterWorld(poseStack, partialTicks);
                     }
                     callStageEvent(RenderPipelineStage.AFTER_WORLD, poseStack, partialTicks);
                     GLUtils.checkGLError("post AFTER_WORLD events stage");
-                }
+                })
         );
+    }
+
+    private void runStage(Runnable stage) {
+        //? if >=1.20.5 {
+        if (VRRenderState.getPhase().isVanilla()) {
+            stage.run();
+            return;
+        }
+        McModelViewStack.push();
+        McModelViewStack.identity();
+        RenderSystem.applyModelViewMatrix();
+        try {
+            stage.run();
+        } finally {
+            McModelViewStack.pop();
+            RenderSystem.applyModelViewMatrix();
+        }
+        //?} else {
+        /*stage.run();
+        *///?}
+    }
+
+    private void runLevelStage(Runnable stage) {
+        //? if >=1.20.5 {
+        if (VRRenderState.getPhase().isVanilla()) {
+            stage.run();
+            return;
+        }
+        Vector3f[] levelLights = RenderPoseHelper.applyEyeSpaceLevelLights(
+                VRRenderState.getRenderPass());
+        try {
+            runStage(stage);
+        } finally {
+            RenderPoseHelper.restoreLevelLights(levelLights);
+        }
+        //?} else {
+        /*stage.run();
+        *///?}
     }
 
     @Override
     public void renderMainMenu(PoseStack poseStack, float partialTicks) {
         if (currentDecorator == null) return;
 
-        renderAfterSolid(poseStack, partialTicks);
-        callStageEvent(RenderPipelineStage.AFTER_SOLID, poseStack, partialTicks);
+        runStage(() -> {
+            renderAfterSolid(poseStack, partialTicks);
+            callStageEvent(RenderPipelineStage.AFTER_SOLID, poseStack, partialTicks);
 
-        renderAfterTranslucent(poseStack, partialTicks);
-        callStageEvent(RenderPipelineStage.AFTER_TRANSLUCENT, poseStack, partialTicks);
+            renderAfterTranslucent(poseStack, partialTicks);
+            callStageEvent(RenderPipelineStage.AFTER_TRANSLUCENT, poseStack, partialTicks);
 
-        renderAfterWorld(poseStack, partialTicks);
-        callStageEvent(RenderPipelineStage.AFTER_WORLD, poseStack, partialTicks);
+            renderAfterWorld(poseStack, partialTicks);
+            callStageEvent(RenderPipelineStage.AFTER_WORLD, poseStack, partialTicks);
+        });
     }
 
     private void callStageEvent(RenderPipelineStage stage,

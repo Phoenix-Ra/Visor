@@ -39,6 +39,10 @@ import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import net.minecraftforge.network.NetworkDirection;
+//? if >=1.20.5 {
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import java.util.concurrent.ConcurrentHashMap;
+//?}
 //? if <1.20.2 {
 /*import org.apache.commons.lang3.tuple.ImmutablePair;
 *///?}
@@ -57,6 +61,10 @@ public class ForgeModLoader implements ModLoader {
             = new EnumMap<>(RenderPipelineStage.class);
 
     private boolean levelStageListenerRegistered = false;
+
+    //? if >=1.20.5 {
+    private final Map<ResourceLocation, EventNetworkChannel> networkChannels = new ConcurrentHashMap<>();
+    //?}
 
 
     @Override
@@ -107,7 +115,32 @@ public class ForgeModLoader implements ModLoader {
 
     @Override
     public double getItemEntityReach(double baseRange, ItemStack itemStack, EquipmentSlot slot) {
-        Collection<AttributeModifier> attributes = itemStack.getAttributeModifiers(slot)
+        //? if >=1.20.5 {
+        Collection<AttributeModifier> attributes = new ArrayList<>();
+        itemStack.forEachModifier(slot, (attribute, modifier) -> {
+            if (attribute == Attributes.ENTITY_INTERACTION_RANGE) {
+                attributes.add(modifier);
+            }
+        });
+        for (AttributeModifier entry : attributes) {
+            if (entry.operation() == AttributeModifier.Operation.ADD_VALUE) {
+                baseRange += entry.amount();
+            }
+        }
+        double totalRange = baseRange;
+        for (AttributeModifier entry : attributes) {
+            if (entry.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE) {
+                totalRange += baseRange * entry.amount();
+            }
+        }
+        for (AttributeModifier entry : attributes) {
+            if (entry.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
+                totalRange *= 1.0 + entry.amount();
+            }
+        }
+        return totalRange;
+        //?} else {
+        /*Collection<AttributeModifier> attributes = itemStack.getAttributeModifiers(slot)
                 .get(ForgeMod.ENTITY_REACH.get());
         for (AttributeModifier entry : attributes) {
             if (entry.getOperation() == AttributeModifier.Operation.ADDITION) {
@@ -126,6 +159,7 @@ public class ForgeModLoader implements ModLoader {
             }
         }
         return totalRange;
+        *///?}
     }
 
     @Override
@@ -174,6 +208,9 @@ public class ForgeModLoader implements ModLoader {
                 .serverAcceptedVersions((status, version) -> true)
                 .networkProtocolVersion(channel.getNetworkVersion())
                 .eventNetworkChannel();
+        //? if >=1.20.5 {
+        networkChannels.put(channel.getChannelId(), eventChannel);
+        //?}
 
         eventChannel.addListener(event -> {
             FriendlyByteBuf payload = event.getPayload();
@@ -183,7 +220,7 @@ public class ForgeModLoader implements ModLoader {
             copy.writeBytes(payload.copy());
 
             var context = event.getSource();
-            if (context.getDirection().getOriginationSide().isClient()) {
+            if (context.isServerSide()) {
                 if (channel.hasPacketsToServer() && context.getSender() != null) {
                     var sender = context.getSender();
                     context.enqueueWork(() -> channel.handleToServer(copy, sender,
@@ -238,9 +275,11 @@ public class ForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToClient payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        //? if >=1.20.2 {
-        return NetworkDirection.PLAY_TO_CLIENT.buildPacket(buffer, channelId).getThis();
-        //?} else {
+        //? if >=1.20.5 {
+        return NetworkDirection.PLAY_TO_CLIENT.buildPacket(networkChannel(channelId), buffer);
+        //?} elif >=1.20.2 {
+        /*return NetworkDirection.PLAY_TO_CLIENT.buildPacket(buffer, channelId).getThis();
+        *///?} else {
         /*return NetworkDirection.PLAY_TO_CLIENT.buildPacket(new ImmutablePair<>(buffer, 0), channelId).getThis();
         *///?}
     }
@@ -250,9 +289,11 @@ public class ForgeModLoader implements ModLoader {
                                                    @NotNull VisorPayloadToServer payload) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         payload.write(buffer);
-        //? if >=1.20.2 {
-        return NetworkDirection.PLAY_TO_SERVER.buildPacket(buffer, channelId).getThis();
-        //?} else {
+        //? if >=1.20.5 {
+        return NetworkDirection.PLAY_TO_SERVER.buildPacket(networkChannel(channelId), buffer);
+        //?} elif >=1.20.2 {
+        /*return NetworkDirection.PLAY_TO_SERVER.buildPacket(buffer, channelId).getThis();
+        *///?} else {
         /*return NetworkDirection.PLAY_TO_SERVER.buildPacket(new ImmutablePair<>(buffer, 0), channelId).getThis();
         *///?}
     }
@@ -274,6 +315,16 @@ public class ForgeModLoader implements ModLoader {
 
     // ----- INNER -----
 
+    //? if >=1.20.5 {
+    private EventNetworkChannel networkChannel(ResourceLocation channelId) {
+        EventNetworkChannel channel = networkChannels.get(channelId);
+        if (channel == null) {
+            throw new IllegalStateException("No Visor network channel registered for " + channelId);
+        }
+        return channel;
+    }
+    //?}
+
     private void onRenderLevelStage(RenderLevelStageEvent event) {
         RenderPipelineStage stage = mapForgeStage(event.getStage());
         if (stage == null) return;
@@ -281,7 +332,13 @@ public class ForgeModLoader implements ModLoader {
         List<RenderPipelineCallback> callbacks = pipelineCallbacks.get(stage);
         if (callbacks == null || callbacks.isEmpty()) return;
 
-        PoseStack poseStack = event.getPoseStack();
+        //? if >=1.20.5 {
+        // Forge 50 hands out the frustum matrix, not a PoseStack: 1.20.5 keeps the view rotation
+        // on the model-view stack, so an identity pose is what Fabric and NeoForge pass too
+        PoseStack poseStack = new PoseStack();
+        //?} else {
+        /*PoseStack poseStack = event.getPoseStack();
+        *///?}
         float partialTicks = event.getPartialTick();
 
         for (RenderPipelineCallback callback : callbacks) {

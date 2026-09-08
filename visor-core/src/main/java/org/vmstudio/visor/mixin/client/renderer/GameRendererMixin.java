@@ -1,6 +1,7 @@
 package org.vmstudio.visor.mixin.client.renderer;
 
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -8,6 +9,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import me.phoenixra.atumvr.api.enums.EyeType;
 import org.vmstudio.visor.api.ModLoader;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
 import org.vmstudio.visor.api.client.ClientFeature;
 import org.vmstudio.visor.api.common.player.VRPose;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
@@ -246,7 +250,7 @@ public abstract class GameRendererMixin
 
         VRRenderPass renderPass = VRRenderState.getRenderPass();
         if(renderPass == VRRenderPass.EYE_LEFT){
-            posestack.mulPoseMatrix(
+            McRenderUtils.mulPose(posestack,
                     ClientContext.renderer.getEyeProjection(EyeType.LEFT)
             );
             info.setReturnValue(
@@ -255,7 +259,7 @@ public abstract class GameRendererMixin
             return;
         }
         if (renderPass == VRRenderPass.EYE_RIGHT) {
-            posestack.mulPoseMatrix(
+            McRenderUtils.mulPose(posestack,
                     ClientContext.renderer.getEyeProjection(EyeType.RIGHT)
             );
             info.setReturnValue(posestack.last().pose());
@@ -263,7 +267,7 @@ public abstract class GameRendererMixin
         }
         if (renderPass == VRRenderPass.THIRD_PERSON) {
             if (VRClientSettings.getMirrorMode() == MirrorMode.MIXED_REALITY) {
-                posestack.mulPoseMatrix(
+                McRenderUtils.mulPose(posestack,
                         new Matrix4f().setPerspective(
                                 VRClientSettings.getMixedRealityFov() * Mth.DEG_TO_RAD,
                                 VRClientSettings.getMixedRealityAspectRatio(), this.visor$nearClipPlane,
@@ -271,7 +275,7 @@ public abstract class GameRendererMixin
                         )
                 );
             }else {
-                posestack.mulPoseMatrix(
+                McRenderUtils.mulPose(posestack,
                         new Matrix4f().setPerspective(
                                 VRClientSettings.getThirdPersonFov() * Mth.DEG_TO_RAD,
                                 (float) this.minecraft.getWindow().getScreenWidth()
@@ -289,7 +293,7 @@ public abstract class GameRendererMixin
             posestack.translate(this.zoomX, -this.zoomY, 0.0D);
             posestack.scale(this.zoom, this.zoom, 1.0F);
         }
-        posestack.mulPoseMatrix(
+        McRenderUtils.mulPose(posestack,
                 new Matrix4f()
                         .setPerspective(
                                 (float) d * Mth.DEG_TO_RAD,
@@ -311,12 +315,12 @@ public abstract class GameRendererMixin
                         minecraft.options.fov().get()
                 )
         );
-        RenderSystem.getModelViewStack().setIdentity();
+        McModelViewStack.identity();
         RenderSystem.applyModelViewMatrix();
     }
 
 
-    @WrapMethod(method = "pick")
+    @WrapMethod(method = "pick(F)V")
     private void visor$pickWithVRHands(float partialTick, Operation<Void> original) {
         if(VisorState.get().isNotActive()){
             original.call(partialTick);
@@ -414,7 +418,19 @@ public abstract class GameRendererMixin
         return -180F;
     }
 
-    @Inject(at = @At(value = "NEW", target = "org/joml/Matrix3f", remap = false),
+    //? if >=1.20.5 {
+    @ModifyExpressionValue(method = "renderLevel",
+            at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;rotationXYZ(FFF)Lorg/joml/Matrix4f;", remap = false))
+    public Matrix4f visor$orientCameraToPass(Matrix4f frustumMatrix) {
+        if (VRRenderState.getPhase().isNotVanilla()) {
+            RenderPoseHelper.applyCameraOrientation(
+                    VRRenderState.getRenderPass(), frustumMatrix
+            );
+        }
+        return frustumMatrix;
+    }
+    //?} else {
+    /*@Inject(at = @At(value = "NEW", target = "org/joml/Matrix3f", remap = false),
             method = "renderLevel")
     public void visor$orientCameraToPass(float partialTicks, long nanos, PoseStack poseStack, CallbackInfo ci) {
         if (VRRenderState.getPhase().isNotVanilla()) {
@@ -423,6 +439,7 @@ public abstract class GameRendererMixin
             );
         }
     }
+    *///?}
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V"), method = "renderLevel")
     public void visor$pickAndSetupCamera(GameRenderer g, float pPartialTicks) {
@@ -444,7 +461,11 @@ public abstract class GameRendererMixin
     }
 
     @Inject(at = @At(value = "TAIL"), method = "renderLevel")
-    public void visor$restoreCamera(float f, long j, PoseStack p, CallbackInfo i) {
+    //? if >=1.20.5 {
+    public void visor$restoreCamera(float f, long j, CallbackInfo i) {
+    //?} else {
+    /*public void visor$restoreCamera(float f, long j, PoseStack p, CallbackInfo i) {
+    *///?}
         if(VRRenderState.getPhase().isNotVanilla()) {
             this.visor$restoreCameraEntity(
                     this.minecraft.getCameraEntity()
@@ -456,7 +477,12 @@ public abstract class GameRendererMixin
     /* ********************* *\
   //--------RAY TRACING--------\\
     \* ********************* */
-    @ModifyVariable(at = @At("STORE"), method = "pick(F)V", ordinal = 0)
+    // 1.20.5 moved the ray trace into pick(Entity,DDF), pick(F)V has no Vec3 locals left
+    //? if >=1.20.5 {
+    @ModifyVariable(at = @At("STORE"), method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", ordinal = 0)
+    //?} else {
+    /*@ModifyVariable(at = @At("STORE"), method = "pick(F)V", ordinal = 0)
+    *///?}
     public Vec3 visor$pickPos(Vec3 original) {
         if (VisorState.get().isNotActive()) {
             return original;
@@ -470,13 +496,13 @@ public abstract class GameRendererMixin
 
         HitResult hitResult = visor$pickBlock(
                 renderPose.getHand(hand),
-                this.minecraft.gameMode.getPickRange(),
+                McVersionClientUtils.blockPickRange(this.minecraft.gameMode, this.minecraft.player),
                 false
         );
         this.minecraft.hitResult = hitResult;
         Vec3 fallbackAimHitPos = visor$pointAlongAim(
                 renderPose.getHand(hand),
-                this.minecraft.gameMode.getPickRange()
+                McVersionClientUtils.blockPickRange(this.minecraft.gameMode, this.minecraft.player)
         );
         this.visor$aimHitPos = hitResult != null && hitResult.getType() != HitResult.Type.MISS
                 ? hitResult.getLocation()
@@ -485,7 +511,11 @@ public abstract class GameRendererMixin
         return new Vec3((Vector3f) renderPose.getHand(hand).getPosition());
     }
 
-    @ModifyVariable(at = @At("STORE"), method = "pick(F)V", ordinal = 1)
+    //? if >=1.20.5 {
+    @ModifyVariable(at = @At("STORE"), method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", ordinal = 1)
+    //?} else {
+    /*@ModifyVariable(at = @At("STORE"), method = "pick(F)V", ordinal = 1)
+    *///?}
     public Vec3 visor$pickDirection(Vec3 original) {
         if (VisorState.get().isNotActive()) {
             return original;
@@ -500,6 +530,18 @@ public abstract class GameRendererMixin
         );
     }
 
+
+
+    //? if >=1.20.5 {
+    @Redirect(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;pick(DFZ)Lnet/minecraft/world/phys/HitResult;"))
+    private HitResult visor$vrBlockPick(Entity entity, double range, float partialTick, boolean fluid) {
+        if (VisorState.get().isNotActive() || this.minecraft.hitResult == null) {
+            return entity.pick(range, partialTick, fluid);
+        }
+        return this.minecraft.hitResult;
+    }
+    //?}
 
 
     /* ******************************* *\
@@ -570,7 +612,11 @@ public abstract class GameRendererMixin
     }
 
     @Inject(at = @At("TAIL"), method = "renderLevel")
-    public void visor$releaseHiddenAreaMask(float f, long l, PoseStack poseStack, CallbackInfo ci) {
+    //? if >=1.20.5 {
+    public void visor$releaseHiddenAreaMask(float f, long l, CallbackInfo ci) {
+    //?} else {
+    /*public void visor$releaseHiddenAreaMask(float f, long l, PoseStack poseStack, CallbackInfo ci) {
+    *///?}
         if(VRRenderState.getPhase().isNotVanilla()) {
             RenderEffectsHelper.releaseHiddenAreaMask();
         }

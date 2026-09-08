@@ -27,6 +27,8 @@ public abstract class MouseHandlerMixin {
     /* ****************** *\
       //--------VR MOUSE--------\\
         \* ****************** */
+    // 1.20.5 split this into handleAccumulatedMovement (which also dispatches the screen
+    // mouseMoved/mouseDragged events - cancelling THAT kills slider dragging) + turnPlayer(double)
     @Inject(at = @At("HEAD"), method = "turnPlayer", cancellable = true)
     public void visor$noTurn(CallbackInfo ci) {
         if (VisorState.get().isNotActive()) {

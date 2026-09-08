@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -89,7 +91,7 @@ public class RenderGuiHelper {
         // --- Pose ---
         poseStack.pushPose();
         poseStack.translate(position.x() - eye.x(), position.y() - eye.y(), position.z() - eye.z());
-        poseStack.mulPoseMatrix((Matrix4f) orientation);
+        McRenderUtils.mulPose(poseStack, (Matrix4f) orientation);
         poseStack.scale(scale, scale, scale);
 
         // --- Quad + light ---

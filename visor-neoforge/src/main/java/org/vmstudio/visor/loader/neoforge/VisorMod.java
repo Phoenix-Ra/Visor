@@ -8,9 +8,11 @@ import org.vmstudio.visor.api.ModLoader;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.visor.core.common.addon.AddonManagerImpl;
 
-//? if >=1.20.4 {
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-//?}
+//? if >=1.20.5 {
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+//?} elif >=1.20.4 {
+/*import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
+*///?}
 
 @Mod(VisorAPI.MOD_ID)
 public class VisorMod {
@@ -27,7 +29,11 @@ public class VisorMod {
     }
 
     //? if >=1.20.4 {
-    private void onRegisterPayloadHandler(final RegisterPayloadHandlerEvent event){
+    //? if >=1.20.5 {
+    private void onRegisterPayloadHandler(final RegisterPayloadHandlersEvent event){
+    //?} else {
+    /*private void onRegisterPayloadHandler(final RegisterPayloadHandlerEvent event){
+    *///?}
         if (ModLoader.get() instanceof NeoForgeModLoader loader) {
             loader.registerPayloads(event);
         }

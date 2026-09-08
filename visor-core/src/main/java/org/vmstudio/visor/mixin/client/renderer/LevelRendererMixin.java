@@ -104,10 +104,17 @@ public abstract class LevelRendererMixin implements ResourceManagerReloadListene
         return CullFrustumHelper.widenCullProjection(projection);
     }
 
+    //? if >=1.20.5 {
     @Redirect(
+            method = "renderLevel(FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;isDetached()Z")
+    )
+    //?} else {
+    /*@Redirect(
             method = "renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;isDetached()Z")
     )
+    *///?}
     private boolean visor$renderSpectatedVRSelfView(Camera camera) {
         if (VRRenderState.isSpectatedVRView(camera.getEntity())) {
             return true;
@@ -144,10 +151,17 @@ public abstract class LevelRendererMixin implements ResourceManagerReloadListene
 
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;getRenderDistance()F", shift = Shift.BEFORE),
-            method = "renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V")
+            //? if >=1.20.5 {
+            method = "renderLevel(FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V")
+    public void visor$maskHiddenArea(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer,
+                             LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo info
+    ) {
+            //?} else {
+            /*method = "renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V")
     public void visor$maskHiddenArea(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer,
                              LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo info
     ) {
+    *///?}
         if (VRRenderState.getPhase().isNotVanilla()) {
             RenderEffectsHelper.maskHiddenArea();
         }

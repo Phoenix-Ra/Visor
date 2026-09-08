@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -169,11 +171,10 @@ public class MirrorHelper {
         RenderSystem.setProjectionMatrix(proj, VertexSorting.ORTHOGRAPHIC_Z);
 
         // 3) push / configure model-view
-        var mv = RenderSystem.getModelViewStack();
-        mv.pushPose();
+        McModelViewStack.push();
         try {
-            mv.setIdentity();
-            mv.translate(0, 0, -CAMERA_Z);
+            McModelViewStack.identity();
+            McModelViewStack.translate(0, 0, -CAMERA_Z);
             RenderSystem.applyModelViewMatrix();
 
             // 4) disable fog + clear
@@ -202,7 +203,7 @@ public class MirrorHelper {
 
             gui.flush();
         } finally {
-            mv.popPose();
+            McModelViewStack.pop();
             RenderSystem.applyModelViewMatrix();
             RenderSystem.restoreProjectionMatrix();
             RenderStateHelper.restoreAfterExternalRender();

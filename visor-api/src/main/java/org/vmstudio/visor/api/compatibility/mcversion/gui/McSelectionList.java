@@ -52,7 +52,11 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
     protected void renderRows(GuiGraphics guiGraphics,
                               int mouseX, int mouseY,
                               float partialTick) {
-        super.renderList(guiGraphics, mouseX, mouseY, partialTick);
+        //? if >=1.20.5 {
+        super.renderListItems(guiGraphics, mouseX, mouseY, partialTick);
+        //?} else {
+        /*super.renderList(guiGraphics, mouseX, mouseY, partialTick);
+        *///?}
     }
 
 
@@ -77,6 +81,13 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
     public void setRenderSelection(boolean render) {
         //? if <1.20.2 {
         /*super.setRenderSelection(render);
+        *///?}
+    }
+
+    // 1.20.5 dropped the flag, the background moved to renderListBackground
+    public void setRenderBackground(boolean render) {
+        //? if <1.20.5 {
+        /*super.setRenderBackground(render);
         *///?}
     }
 
@@ -131,10 +142,17 @@ public abstract class McSelectionList<E extends McSelectionList.Entry<E>> extend
     }
     *///?}
 
+    //? if >=1.20.5 {
     @Override
+    protected final void renderListItems(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        renderRows(guiGraphics, mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
     protected final void renderList(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderRows(guiGraphics, mouseX, mouseY, partialTick);
     }
+    *///?}
 
     //? if <1.20.2 {
     /*@Override

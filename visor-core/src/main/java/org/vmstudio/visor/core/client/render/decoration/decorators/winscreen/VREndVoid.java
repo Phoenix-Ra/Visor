@@ -10,9 +10,12 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11C;
+import org.vmstudio.visor.core.client.render.VRRenderState;
 import org.vmstudio.visor.core.client.render.VRShaders;
+import org.vmstudio.visor.core.client.render.helpers.RenderPoseHelper;
 import org.vmstudio.visor.core.client.render.shaders.VRShaderEndPortal;
 import org.vmstudio.visor.mixin.client.accessors.RenderSystemAccessor;
 
@@ -45,6 +48,11 @@ public final class VREndVoid {
         RenderSystem.setShaderGameTime((long) portalTicks, portalTicks % 1.0f);
 
         RenderSystem.setShader(() -> shader);
+        //? if >=1.20.5 {
+        // 1.20.5 deleted ShaderInstance's IViewRotMat
+        shader.safeGetUniform("IViewRotMat").set(new Matrix3f(
+                RenderPoseHelper.getViewRotation(VRRenderState.getRenderPass())).invert());
+        //?}
         RenderSystem.setShaderTexture(0, TheEndPortalRenderer.END_SKY_LOCATION);
         RenderSystem.setShaderTexture(1, TheEndPortalRenderer.END_PORTAL_LOCATION);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -74,6 +82,9 @@ public final class VREndVoid {
         BufferUploader.drawWithShader(bufferBuilder.end());
 
         poseStack.popPose();
+        //? if >=1.20.5 {
+        shader.safeGetUniform("IViewRotMat").set(new Matrix3f());
+        //?}
         RenderSystemAccessor.setShaderGameTime(previousGameTime);
     }
 }

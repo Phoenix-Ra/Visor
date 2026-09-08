@@ -1,5 +1,7 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -146,7 +148,7 @@ public class GameEffectPumpkin extends VRGameEffect {
         }
         ItemStack headItem = MC.player.getInventory().getArmor(3);
         return headItem.getItem() == Blocks.CARVED_PUMPKIN.asItem()
-                && (!headItem.hasTag() || headItem.getTag().getInt("CustomModelData") == 0);
+                && McVersionUtils.customModelData(headItem) == 0;
     }
 
     @Override

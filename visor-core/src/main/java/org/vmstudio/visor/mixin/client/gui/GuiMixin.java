@@ -8,7 +8,6 @@ import org.vmstudio.visor.api.client.settings.VRClientSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -32,7 +31,11 @@ public abstract class GuiMixin implements GuiExtension {
     /* ********************************** *\
   //--------DISABLE VANILLA OVERLAYS--------\\
     \* ********************************** */
-    @Inject(at = @At("HEAD"), method = "renderHotbar", cancellable = true)
+    //? if >=1.20.5 {
+    @Inject(at = @At("HEAD"), method = "renderItemHotbar", cancellable = true)
+    //?} else {
+    /*@Inject(at = @At("HEAD"), method = "renderHotbar", cancellable = true)
+    *///?}
     public void visor$noVanillaHotbar(CallbackInfo ci) {
         if(VisorState.get().isNotActive()
                 || (minecraft.screen == null
@@ -64,17 +67,31 @@ public abstract class GuiMixin implements GuiExtension {
                 && ClientContext.visor.isFeatureDisabled(ClientFeature.GUI_DISABLE_HUD))) return;
         ci.cancel();
     }
-    @Redirect(at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/components/BossHealthOverlay;render(Lnet/minecraft/client/gui/GuiGraphics;)V"),
-            method = "render")
-    public void visor$noVanillaGuiBossHealth(BossHealthOverlay instance,
-                                             GuiGraphics guiGraphics) {
+    //? if >=1.20.5 {
+    @Inject(at = @At("HEAD"), method = "renderExperienceLevel", cancellable = true)
+    public void visor$noVanillaExperienceLevel(CallbackInfo ci) {
         if(VisorState.get().isNotActive() || (minecraft.screen == null
-                && ClientContext.visor.isFeatureDisabled(ClientFeature.GUI_DISABLE_HUD))) {
-            instance.render(guiGraphics);
+                && ClientContext.visor.isFeatureDisabled(ClientFeature.GUI_DISABLE_HUD))) return;
+        ci.cancel();
+    }
+    //?}
+    //? if >=1.20.5 {
+    @Redirect(at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/components/ChatComponent;render(Lnet/minecraft/client/gui/GuiGraphics;IIIZ)V"),
+            method = "renderChat")
+    public void visor$noVanillaGuiChat(ChatComponent instance,
+                                       GuiGraphics guiGraphics,
+                                       int i, int j, int k, boolean focused) {
+        if(VisorState.get().isNotActive()) {
+            instance.render(guiGraphics, i, j, k, focused);
+            return;
+        }
+        if(minecraft.screen instanceof ChatScreen) {
+            instance.render(guiGraphics, i, j, k, focused);
         }
     }
-    @Redirect(at = @At(value = "INVOKE",
+    //?} else {
+    /*@Redirect(at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/components/ChatComponent;render(Lnet/minecraft/client/gui/GuiGraphics;III)V"),
             method = "render")
     public void visor$noVanillaGuiChat(ChatComponent instance,
@@ -88,6 +105,7 @@ public abstract class GuiMixin implements GuiExtension {
             instance.render(guiGraphics, i, j, k);
         }
     }
+    *///?}
 
 
     @Inject(at = @At("HEAD"), method = "renderVignette", cancellable = true)
@@ -129,12 +147,20 @@ public abstract class GuiMixin implements GuiExtension {
     }
 
     @Inject(at = @At("HEAD"), method = "renderCrosshair", cancellable = true)
-    public void visor$noCrosshair(GuiGraphics guiGraphics, CallbackInfo ci) {
+    //? if >=1.20.5 {
+    public void visor$noCrosshair(GuiGraphics guiGraphics, float partialTick, CallbackInfo ci) {
+    //?} else {
+    /*public void visor$noCrosshair(GuiGraphics guiGraphics, CallbackInfo ci) {
+    *///?}
         if(VisorState.get().isNotActive()) return;
         ci.cancel();
     }
 
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getSleepTimer()I"), method = "render")
+    //? if >=1.20.5 {
+    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getSleepTimer()I"), method = "renderSleepOverlay")
+    //?} else {
+    /*@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getSleepTimer()I"), method = "render")
+    *///?}
     public int visor$suppressSleepFade(LocalPlayer instance) {
         return VisorState.get().isActive()
                 ? 0

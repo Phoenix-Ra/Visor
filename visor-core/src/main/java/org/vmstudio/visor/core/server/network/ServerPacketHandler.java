@@ -1,5 +1,4 @@
 package org.vmstudio.visor.core.server.network;
-
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -31,9 +30,9 @@ import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.Logger;
 import org.vmstudio.visor.extensions.common.ServerPlayerGameModeExtension;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import java.util.function.Consumer;
 
-import static net.minecraft.server.network.ServerGamePacketListenerImpl.MAX_INTERACTION_DISTANCE;
 
 public class ServerPacketHandler {
 
@@ -175,7 +174,7 @@ public class ServerPacketHandler {
                     }
 
                     AABB aABB = entity.getBoundingBox();
-                    if (aABB.distanceToSqr(serverPlayer.getEyePosition()) < MAX_INTERACTION_DISTANCE) {
+                    if (McVersionUtils.canInteractWithEntity(serverPlayer, aABB)) {
 
                         if (!(entity instanceof ItemEntity) && !(entity instanceof ExperienceOrb)
                                 && !(entity instanceof AbstractArrow) && entity != serverPlayer) {
