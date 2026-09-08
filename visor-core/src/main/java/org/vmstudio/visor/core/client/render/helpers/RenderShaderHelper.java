@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -44,7 +45,7 @@ public class RenderShaderHelper {
     private static final float[]  UV_V   = {  0.0F,  0.0F,  1.0F,  1.0F };
 
     public static void renderFullscreenQuad(VertexFormat format) {
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
 
 
         buf.begin(VertexFormat.Mode.TRIANGLE_STRIP, format);
@@ -52,7 +53,7 @@ public class RenderShaderHelper {
             putFullscreenVertex(buf, format, i);
         }
 
-        BufferUploader.draw(buf.end());
+        buf.drawNoShader();
     }
 
     public static void renderQuad(VertexFormat format,
@@ -62,7 +63,7 @@ public class RenderShaderHelper {
                                   float z0,
                                   float x1,
                                   float z1) {
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, format);
 
         putQuadVertex(buf, format, matrix, x0, y, z0, 0.0F, 0.0F);
@@ -70,10 +71,10 @@ public class RenderShaderHelper {
         putQuadVertex(buf, format, matrix, x1, y, z1, 1.0F, 1.0F);
         putQuadVertex(buf, format, matrix, x0, y, z1, 0.0F, 1.0F);
 
-        BufferUploader.draw(buf.end());
+        buf.drawNoShader();
     }
 
-    private static void putFullscreenVertex(BufferBuilder buf, VertexFormat format, int index) {
+    private static void putFullscreenVertex(McVertexBuilder buf, VertexFormat format, int index) {
         var vertex = buf.vertex(POS_X[index], POS_Y[index], 0.0);
         if (format == DefaultVertexFormat.POSITION_TEX) {
             vertex.uv(UV_U[index], UV_V[index]).endVertex();
@@ -86,7 +87,7 @@ public class RenderShaderHelper {
         }
     }
 
-    private static void putQuadVertex(BufferBuilder buf,
+    private static void putQuadVertex(McVertexBuilder buf,
                                       VertexFormat format,
                                       Matrix4f matrix,
                                       float x,

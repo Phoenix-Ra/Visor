@@ -27,12 +27,17 @@ public abstract class AbstractArrowMixin extends Entity {
     @Shadow
     private double baseDamage;
 
-    // 1.20.3 gave every arrow constructor the pickup ItemStack
-    //? if >=1.20.3 {
-    @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;)V")
+    // 1.20.3 gave every arrow constructor the pickup ItemStack,
+    // 1.21 the firing weapon as well
+    //? if >=1.21 {
+    @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)V")
+    public void visor$setupPos(EntityType<? extends AbstractArrow> entityType, LivingEntity shooter, Level level, ItemStack pickupItem, ItemStack weapon, CallbackInfo ci
+    ) {
+    //?} elif >=1.20.3 {
+    /*@Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;)V")
     public void visor$setupPos(EntityType<? extends AbstractArrow> entityType, LivingEntity shooter, Level level, ItemStack pickupItem, CallbackInfo ci
     ) {
-    //?} else {
+    *///?} else {
     /*@Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;)V")
     public void visor$setupPos(EntityType<? extends AbstractArrow> entityType, LivingEntity shooter, Level level, CallbackInfo ci
     ) {

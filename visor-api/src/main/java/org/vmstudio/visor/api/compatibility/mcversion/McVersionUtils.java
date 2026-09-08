@@ -12,6 +12,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.phys.AABB;
 //? if >=1.20.5 {
 import net.minecraft.core.component.DataComponents;
@@ -34,10 +35,37 @@ public class McVersionUtils {
 
     public static ResourceLocation newResourceLoc(String namespace,
                                                   String path){
-        return new ResourceLocation(namespace, path);
+        //? if >=1.21 {
+        return ResourceLocation.fromNamespaceAndPath(namespace, path);
+        //?} else {
+        /*return new ResourceLocation(namespace, path);
+        *///?}
     }
     public static ResourceLocation newResourceLoc(String location){
-        return new ResourceLocation(location);
+        //? if >=1.21 {
+        return ResourceLocation.parse(location);
+        //?} else {
+        /*return new ResourceLocation(location);
+        *///?}
+    }
+
+
+    // ------- ITEM USE -------
+
+    public static int useDuration(ItemStack stack, LivingEntity user) {
+        //? if >=1.21 {
+        return stack.getUseDuration(user);
+        //?} else {
+        /*return stack.getUseDuration();
+        *///?}
+    }
+
+    public static float riptideStrength(ItemStack stack, LivingEntity user) {
+        //? if >=1.21 {
+        return EnchantmentHelper.getTridentSpinAttackStrength(stack, user);
+        //?} else {
+        /*return EnchantmentHelper.getRiptide(stack);
+        *///?}
     }
 
 
@@ -71,8 +99,6 @@ public class McVersionUtils {
         *///?}
     }
 
-    // 1.20.5 replaced ServerGamePacketListenerImpl.MAX_INTERACTION_DISTANCE
-    // with the block/entity interaction range attributes
     public static boolean canInteractWithEntity(Player player,
                                                 AABB boundingBox){
         //? if >=1.20.5 {
@@ -94,7 +120,6 @@ public class McVersionUtils {
     }
 
 
-    // 1.20.5 replaced Entity.setMaxUpStep with the STEP_HEIGHT attribute
     public static void setStepHeight(LivingEntity entity, float stepHeight){
         //? if >=1.20.5 {
         AttributeInstance instance = entity.getAttribute(Attributes.STEP_HEIGHT);
@@ -108,7 +133,6 @@ public class McVersionUtils {
 
 
     // ------- ITEMS -------
-    // 1.20.5 replaced ItemStack NBT tags with data components
 
     public static ChatFormatting rarityColor(Rarity rarity){
         //? if >=1.20.5 {

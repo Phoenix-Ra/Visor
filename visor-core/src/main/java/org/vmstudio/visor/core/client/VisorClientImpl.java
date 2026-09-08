@@ -48,7 +48,11 @@ import org.vmstudio.visor.core.common.addon.CoreAddonClient;
 
 import org.vmstudio.visor.api.common.utils.LoggerUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.OptionsScreen;
+//? if >=1.21 {
+import net.minecraft.client.gui.screens.options.OptionsScreen;
+//?} else {
+/*import net.minecraft.client.gui.screens.OptionsScreen;
+*///?}
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;

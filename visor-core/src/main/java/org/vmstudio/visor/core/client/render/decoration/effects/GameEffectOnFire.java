@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
@@ -83,7 +84,7 @@ public class GameEffectOnFire extends VRGameEffect {
         RenderPoseHelper.applyCameraPose(renderPass, stack);
 
         // --- Render ---
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         for (int i = 0; i < 4; i++) {
             stack.pushPose();
             // spin quad around player
@@ -102,7 +103,7 @@ public class GameEffectOnFire extends VRGameEffect {
                     .uv(u0, v0).color(1,1,1,FIRE_ALPHA).endVertex();
             buf.vertex(mat, -FIRE_HALF_WIDTH, fireHeight,  -FIRE_HALF_WIDTH)
                     .uv(u1, v0).color(1,1,1,FIRE_ALPHA).endVertex();
-            BufferUploader.drawWithShader(buf.end());
+            buf.draw();
 
             stack.popPose();
         }

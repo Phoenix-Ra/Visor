@@ -1,9 +1,9 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import me.phoenixra.atumvr.api.misc.color.AtumColorImmutable;
 import net.minecraft.world.entity.Pose;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
@@ -95,7 +95,7 @@ public class GameEffectShadow extends VRGameEffect {
 
         // --- Render ---
         RenderHelper.renderFlatQuad(
-                Tesselator.getInstance().getBuilder(),
+                McVertexBuilder.get(),
                 poseStack.last().pose(),
                 VRMathUtils.ZERO_VECTOR,
                 playerWidth,

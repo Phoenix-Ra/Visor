@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects.hand;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
@@ -103,8 +104,7 @@ public class HandEffectTeleport extends VRHandEffect {
         MC.getTextureManager().bindForSetup(TexturesHelper.getWhiteTexture());
         RenderSystem.setShaderTexture(0, TexturesHelper.getWhiteTexture());
 
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder builder = tesselator.getBuilder();
+        McVertexBuilder builder = McVertexBuilder.get();
         builder.begin(VertexFormat.Mode.QUADS,
                 DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
@@ -172,7 +172,7 @@ public class HandEffectTeleport extends VRHandEffect {
 
             float rise = (float) progress * 2.0F;
             renderBox(
-                    tesselator,
+                    builder,
                     tail, head,
                     -halfWidth, halfWidth,
                     (rise - 1.0F) * halfWidth,
@@ -182,7 +182,7 @@ public class HandEffectTeleport extends VRHandEffect {
                     poseStack
             );
         }
-        tesselator.end();
+        builder.draw();
 
         // Custom Shader Landing Pad Effect using our own shader
         if (validLocation && TaskTeleport.getInstance().isArcActive()) {
@@ -236,7 +236,7 @@ public class HandEffectTeleport extends VRHandEffect {
     }
 
 
-    public static void renderBox(Tesselator tes, Vec3 start, Vec3 end,
+    public static void renderBox(McVertexBuilder buffer, Vec3 start, Vec3 end,
                                  float minX, float maxX,
                                  float minY, float maxY,
                                  Vec3i color, byte alpha,
@@ -269,7 +269,6 @@ public class HandEffectTeleport extends VRHandEffect {
                 {4, 0, 2, 6}    // bottom
         };
 
-        BufferBuilder buffer = tes.getBuilder();
         Matrix4f mat = poseStack.last().pose();
         for (int f = 0; f < faces.length; f++) {
             for (int corner : faces[f]) {
@@ -278,7 +277,7 @@ public class HandEffectTeleport extends VRHandEffect {
         }
     }
 
-    private static void addVertex(BufferBuilder buff,
+    private static void addVertex(McVertexBuilder buff,
                                   Matrix4f mat, Vec3 pos, Vec3i color,
                                   int alpha, Vec3 normal) {
         buff.vertex(mat, (float) pos.x, (float) pos.y, (float) pos.z)

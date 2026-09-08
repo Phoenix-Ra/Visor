@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.mainmenu;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -402,7 +403,7 @@ public final class VRMenuSky {
     public static void renderFirst(PoseStack poseStack) {
 
         // --- Prepare variables ---
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder builder = McVertexBuilder.get();
         Matrix4f pose = poseStack.last().pose();
         prepareSkyBox();
         currentTime = Util.getMillis();
@@ -441,7 +442,7 @@ public final class VRMenuSky {
 
     public static void renderLast(PoseStack poseStack) {
         // --- Prepare variables ---
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder builder = McVertexBuilder.get();
         Matrix4f pose = poseStack.last().pose();
 
         // --- Setup ---
@@ -570,7 +571,7 @@ public final class VRMenuSky {
         face[2] = (int) (rgb[2] * shade);
     }
 
-    private static void renderSkyBox(BufferBuilder builder,
+    private static void renderSkyBox(McVertexBuilder builder,
                                      Matrix4f pose){
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
@@ -605,12 +606,12 @@ public final class VRMenuSky {
         horizon(builder, pose, SKY_BOX, -SKY_BOX, -SKY_BOX);
         horizon(builder, pose, -SKY_BOX, -SKY_BOX, -SKY_BOX);
 
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
     }
 
     // ====== CELESTIAL BODIES ======
 
-    private static void renderSun(BufferBuilder builder,
+    private static void renderSun(McVertexBuilder builder,
                                   Matrix4f pose) {
         float elevation = currentSunDir.y;
         float visible = smoothstep(-0.06f, 0.04f, elevation);
@@ -634,7 +635,7 @@ public final class VRMenuSky {
         );
     }
 
-    private static void renderMoon(BufferBuilder builder,
+    private static void renderMoon(McVertexBuilder builder,
                                    Matrix4f pose) {
         float visible = smoothstep(-0.06f, 0.06f, currentMoonDir.y);
         if (visible <= 0f) {
@@ -652,7 +653,7 @@ public final class VRMenuSky {
         );
     }
 
-    private static void renderCelestial(BufferBuilder builder, Matrix4f pose,
+    private static void renderCelestial(McVertexBuilder builder, Matrix4f pose,
                                         Vector3f dir, float visible,
                                         ResourceLocation texture, float distance, float size,
                                         AtumColor color,
@@ -670,7 +671,7 @@ public final class VRMenuSky {
         billboardVertex(builder, pose, scratchCenter, scratchRight, scratchUp,  size, -size, u1, v0);
         billboardVertex(builder, pose, scratchCenter, scratchRight, scratchUp,  size,  size, u1, v1);
         billboardVertex(builder, pose, scratchCenter, scratchRight, scratchUp, -size,  size, u0, v1);
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
 
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1, 1, 1, 1);
@@ -678,7 +679,7 @@ public final class VRMenuSky {
 
     // ====== STARS ======
 
-    private static void renderStars(BufferBuilder builder, Matrix4f pose) {
+    private static void renderStars(McVertexBuilder builder, Matrix4f pose) {
         float night = 1f - currentDay;
         if (night <= 0.05f) {
             return;
@@ -701,12 +702,12 @@ public final class VRMenuSky {
 
         emitShootingStar(builder, pose, night);
 
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
 
         RenderSystem.defaultBlendFunc();
     }
 
-    private static void emitShootingStar(BufferBuilder builder, Matrix4f pose,
+    private static void emitShootingStar(McVertexBuilder builder, Matrix4f pose,
                                          float night) {
 
         int windowIndex = (int) (currentTimeSec / SHOOTINGSTAR_FREQUENCY);
@@ -827,7 +828,7 @@ public final class VRMenuSky {
 
     // ====== UFO ======
 
-    private static void renderUfo(BufferBuilder builder, Matrix4f pose) {
+    private static void renderUfo(McVertexBuilder builder, Matrix4f pose) {
         if (currentSceneTime >= 1f) {
             return; //only between 00:00AM and 01:00AM
         }
@@ -877,7 +878,7 @@ public final class VRMenuSky {
                         UFO_DOT_CORE, UFO_BODY_CORE, (int) (235 * fade));
             }
         }
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
 
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1, 1, 1, 1);
@@ -901,7 +902,7 @@ public final class VRMenuSky {
 
     // ====== VISOR SIGN ======
 
-    private static void renderVisorSign(BufferBuilder builder,
+    private static void renderVisorSign(McVertexBuilder builder,
                                         Matrix4f pose) {
         ensureGlowSprite();
 
@@ -939,7 +940,7 @@ public final class VRMenuSky {
                 spriteQuad(builder, pose, cx, cy, cz, VISOR_STAR_CORE * pulse, color, coreAlpha);
             }
         }
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
 
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1, 1, 1, 1);
@@ -947,7 +948,7 @@ public final class VRMenuSky {
 
     // ====== CLOUDS ======
 
-    private static void renderClouds(BufferBuilder builder,
+    private static void renderClouds(McVertexBuilder builder,
                                      Matrix4f pose) {
 
         double driftX = CLOUD_DRIFT_X * currentTimeSec;
@@ -982,10 +983,10 @@ public final class VRMenuSky {
                 emitCloud(builder, pose, cloudCenterX, cloudCenterZ, cellX, cellZ);
             }
         }
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
     }
 
-    private static void emitCloud(BufferBuilder builder, Matrix4f pose,
+    private static void emitCloud(McVertexBuilder builder, Matrix4f pose,
                                   float cloudCenterX, float cloudCenterZ,
                                   int cellX, int cellZ) {
         // deterministic shape + rotation pick for this cell, from the pre-baked variants
@@ -1048,7 +1049,7 @@ public final class VRMenuSky {
         }
     }
 
-    private static void cloudFace(BufferBuilder builder, Matrix4f pose,
+    private static void cloudFace(McVertexBuilder builder, Matrix4f pose,
                                   int[] faceColor,
                                   float corner1X, float corner1Y, float corner1Z,
                                   float corner2X, float corner2Y, float corner2Z,
@@ -1060,7 +1061,7 @@ public final class VRMenuSky {
         cloudVertex(builder, pose, corner4X, corner4Y, corner4Z, faceColor);
     }
 
-    private static void cloudVertex(BufferBuilder builder, Matrix4f pose,
+    private static void cloudVertex(McVertexBuilder builder, Matrix4f pose,
                                     float x, float y, float z,
                                     int[] faceColor) {
         float dist = (float) Math.sqrt(x * x + z * z);
@@ -1121,7 +1122,7 @@ public final class VRMenuSky {
         return removedAny;
     }
 
-    private static void renderUserDots(BufferBuilder builder, Matrix4f pose) {
+    private static void renderUserDots(McVertexBuilder builder, Matrix4f pose) {
         if (userDotCount == 0) {
             return;
         }
@@ -1162,7 +1163,7 @@ public final class VRMenuSky {
                 dotQuad(builder, pose, scratchRight, scratchUp, cx, cy, cz, VISOR_STAR_CORE, colorCore, 255);
             }
         }
-        BufferUploader.drawWithShader(builder.end());
+        builder.draw();
 
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1, 1, 1, 1);
@@ -1192,13 +1193,13 @@ public final class VRMenuSky {
 
 
     // --- SKY BOX
-    private static void zenith(BufferBuilder builder, Matrix4f pose, float x, float y, float z) {
+    private static void zenith(McVertexBuilder builder, Matrix4f pose, float x, float y, float z) {
         builder.vertex(pose, x, y, z)
                 .color(currentZenith.getRedInt(), currentZenith.getGreenInt(), currentZenith.getBlueInt(), 255)
                 .endVertex();
     }
 
-    private static void horizon(BufferBuilder builder, Matrix4f pose, float x, float y, float z) {
+    private static void horizon(McVertexBuilder builder, Matrix4f pose, float x, float y, float z) {
         float inverseLen = 1f / (float) Math.sqrt(x * x + z * z);
         float sunWeight = 0.5f + 0.5f * (x * inverseLen * sunAzimuthX + z * inverseLen * sunAzimuthZ);
         float duskAmount = currentTwilight * (0.25f + 0.75f * sunWeight);
@@ -1235,7 +1236,7 @@ public final class VRMenuSky {
         return new Vector3f[]{right, up};
     }
 
-    private static void billboardVertex(BufferBuilder builder,
+    private static void billboardVertex(McVertexBuilder builder,
                                         Matrix4f pose,
                                         Vector3f center, Vector3f right, Vector3f up,
                                         float rightOffset, float upOffset,
@@ -1254,14 +1255,14 @@ public final class VRMenuSky {
         out[2] = baseZ + right.z * rightOffset + up.z * upOffset;
     }
 
-    private static void starVertex(BufferBuilder builder,
+    private static void starVertex(McVertexBuilder builder,
                                    Matrix4f pose,
                                    float[] p, int alpha) {
         builder.vertex(pose, p[0], p[1], p[2]).color(255, 255, 255, alpha).endVertex();
     }
 
     // ---- GLOWING DOTS
-    private static void spriteQuad(BufferBuilder builder,
+    private static void spriteQuad(McVertexBuilder builder,
                                    Matrix4f pose,
                                    float cx, float cy, float cz,
                                    float hs,
@@ -1274,14 +1275,14 @@ public final class VRMenuSky {
         return Math.max(0f, Math.min(1f, v));
     }
 
-    private static void dotQuad(BufferBuilder builder, Matrix4f pose, Vector3f right, Vector3f up,
+    private static void dotQuad(McVertexBuilder builder, Matrix4f pose, Vector3f right, Vector3f up,
                                 float cx, float cy, float cz, float hs,
                                 AtumColor color, int a) {
         dotQuad(builder, pose, right, up, cx, cy, cz, hs, color.asIntArray(false), a);
     }
 
     // glow-sprite quad around a center, in an arbitrary billboard basis
-    private static void dotQuad(BufferBuilder builder, Matrix4f pose,
+    private static void dotQuad(McVertexBuilder builder, Matrix4f pose,
                                 Vector3f right, Vector3f up,
                                 float cx, float cy, float cz, float hs,
                                 int[] color, int a) {
@@ -1291,7 +1292,7 @@ public final class VRMenuSky {
         dotVertex(builder, pose, right, up, cx, cy, cz, -hs,  hs, 0f, 1f, color[0], color[1], color[2], a);
     }
 
-    private static void dotVertex(BufferBuilder builder, Matrix4f pose,
+    private static void dotVertex(McVertexBuilder builder, Matrix4f pose,
                                   Vector3f right, Vector3f up,
                                   float cx, float cy, float cz,
                                   float offsetX, float offsetY, float u, float v, int r, int g, int b, int a) {

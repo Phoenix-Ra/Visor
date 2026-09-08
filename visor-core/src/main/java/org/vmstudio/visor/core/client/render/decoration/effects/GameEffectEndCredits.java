@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +75,7 @@ public class GameEffectEndCredits extends VRGameEffect {
     }
 
     private void advance() {
-        float seconds = MC.getDeltaFrameTime() / TICKS_PER_SECOND;
+        float seconds = McRenderUtils.deltaFrameTicks() / TICKS_PER_SECOND;
         fade = Math.min(1.0f, fade + seconds / FADE_SECONDS);
         driftDegree += seconds * DRIFT_DEG_PER_SECOND;
         portalTicks += seconds * PORTAL_TICKS_PER_SECOND;

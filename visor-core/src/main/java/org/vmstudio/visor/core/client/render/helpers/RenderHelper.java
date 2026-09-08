@@ -1,6 +1,7 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
@@ -34,7 +35,7 @@ public class RenderHelper {
         return MC.level.getBlockState(pos).isSolidRender(MC.level, pos);
     }
 
-    public static void renderCuboid(BufferBuilder bufferBuilder,
+    public static void renderCuboid(McVertexBuilder bufferBuilder,
                                     Matrix4f poseMatrix,
                                     Vector3fc start,
                                     Vector3fc end,
@@ -93,11 +94,11 @@ public class RenderHelper {
                 addVertex(bufferBuilder, poseMatrix, pos, color, normal);
             }
         }
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        bufferBuilder.draw();
     }
 
 
-    public static void renderFlatQuad(BufferBuilder bufferBuilder,
+    public static void renderFlatQuad(McVertexBuilder bufferBuilder,
                                       Matrix4f poseMatrix,
                                       Vector3fc pos,
                                       float width,
@@ -132,7 +133,7 @@ public class RenderHelper {
                     .normal(normal.x(), normal.y(), normal.z())
                     .endVertex();
         }
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        bufferBuilder.draw();
 
     }
 
@@ -163,7 +164,7 @@ public class RenderHelper {
         RenderSystem.setShaderColor(r, g, b, a);
 
         // --- Render ---
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS,
                 DefaultVertexFormat.POSITION_TEX);
 
@@ -172,7 +173,7 @@ public class RenderHelper {
                     .uv(vertex[3], vertex[4])
                     .endVertex();
         }
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
 
         // --- Restore ---
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
@@ -242,7 +243,7 @@ public class RenderHelper {
 
 
         // --- Render ---
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.NEW_ENTITY);
 
         for (int i = 0; i < 4; i++) {
@@ -257,7 +258,7 @@ public class RenderHelper {
                     .endVertex();
         }
 
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
 
         // --- Restore ---
         MC.gameRenderer.lightTexture().turnOffLightLayer();
@@ -309,7 +310,7 @@ public class RenderHelper {
     }
 
 
-    private static void addVertex(BufferBuilder buff,
+    private static void addVertex(McVertexBuilder buff,
                                   Matrix4f mat,
                                   Vector3fc pos,
                                   AtumColor color,

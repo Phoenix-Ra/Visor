@@ -1,5 +1,8 @@
 package org.vmstudio.visor.mixin.client.renderer;
 
+//? if >=1.21 {
+import net.minecraft.client.DeltaTracker;
+//?}
 import org.vmstudio.visor.api.client.input.HapticFeedback;
 import com.google.common.collect.Sets;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -104,12 +107,17 @@ public abstract class LevelRendererMixin implements ResourceManagerReloadListene
         return CullFrustumHelper.widenCullProjection(projection);
     }
 
-    //? if >=1.20.5 {
+    //? if >=1.21 {
     @Redirect(
+            method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;isDetached()Z")
+    )
+    //?} elif >=1.20.5 {
+    /*@Redirect(
             method = "renderLevel(FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;isDetached()Z")
     )
-    //?} else {
+    *///?} else {
     /*@Redirect(
             method = "renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;isDetached()Z")
@@ -151,12 +159,17 @@ public abstract class LevelRendererMixin implements ResourceManagerReloadListene
 
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;getRenderDistance()F", shift = Shift.BEFORE),
-            //? if >=1.20.5 {
-            method = "renderLevel(FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V")
+            //? if >=1.21 {
+            method = "renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V")
+    public void visor$maskHiddenArea(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer,
+                             LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo info
+    ) {
+            //?} elif >=1.20.5 {
+            /*method = "renderLevel(FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V")
     public void visor$maskHiddenArea(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer,
                              LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo info
     ) {
-            //?} else {
+    *///?} else {
             /*method = "renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V")
     public void visor$maskHiddenArea(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer,
                              LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo info

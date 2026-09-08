@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.mainmenu;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
@@ -42,7 +43,7 @@ public class VRMenuPanorama {
     private static final float[] CORNER_V = {0.0f, 1.0f, 1.0f, 0.0f};
 
     public static void render(PoseStack poseStack) {
-        BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder bufferbuilder = McVertexBuilder.get();
 
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
@@ -74,7 +75,7 @@ public class VRMenuPanorama {
                         .uv(u, v).color(255, 255, 255, 255).endVertex();
             }
 
-            BufferUploader.drawWithShader(bufferbuilder.end());
+            bufferbuilder.draw();
         }
 
         poseStack.popPose();

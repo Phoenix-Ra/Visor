@@ -1,6 +1,7 @@
 package org.vmstudio.visor.core.client.render.decoration.hand;
 
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import org.vmstudio.visor.api.client.input.HapticFeedback;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -218,7 +219,7 @@ public class VRItemPoseDefault extends VRHandItemPose {
                 preYaw = 90;
 
                 float progress = 0.0F;
-                int riptideLevel = EnchantmentHelper.getRiptide(itemStack);
+                float riptideLevel = McVersionUtils.riptideStrength(itemStack, player);
 
                 if (player.isUsingItem()
                         && player.getUseItemRemainingTicks() > 0
@@ -226,7 +227,7 @@ public class VRItemPoseDefault extends VRHandItemPose {
 
                     if (riptideLevel <= 0 || player.isInWaterOrRain()) {
                         progress =
-                                itemStack.getUseDuration() - (player.getUseItemRemainingTicks() - partialTicks + 1.0F);
+                                McVersionUtils.useDuration(itemStack, player) - (player.getUseItemRemainingTicks() - partialTicks + 1.0F);
 
                         if (progress > TridentItem.THROW_THRESHOLD_TIME) {
                             float rotationProgress = progress - TridentItem.THROW_THRESHOLD_TIME;

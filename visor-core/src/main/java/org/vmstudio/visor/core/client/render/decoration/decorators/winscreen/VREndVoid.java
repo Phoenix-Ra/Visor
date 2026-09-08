@@ -1,11 +1,9 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.winscreen;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -66,7 +64,7 @@ public final class VREndVoid {
         poseStack.mulPose(Axis.YP.rotation(driftRad));
 
         Matrix4f pose = poseStack.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder bufferBuilder = McVertexBuilder.get();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         for (int[] face : FACES) {
             for (int corner : face) {
@@ -79,7 +77,7 @@ public final class VREndVoid {
                 ).endVertex();
             }
         }
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        bufferBuilder.draw();
 
         poseStack.popPose();
         //? if >=1.20.5 {

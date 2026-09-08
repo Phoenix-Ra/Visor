@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -192,7 +193,7 @@ public class RenderGuiHelper {
         float barCenterY    = regionBottom - barGap - barHalfHeight;
 
         var pose = poseStack.last().pose();
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         float r = barColor.getRed()   * brightness;
@@ -208,7 +209,7 @@ public class RenderGuiHelper {
         buf.vertex(pose, right, top,    0f).color(r, g, b, a).endVertex();
         buf.vertex(pose, left,  top,    0f).color(r, g, b, a).endVertex();
 
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
     }
 
 
@@ -260,7 +261,7 @@ public class RenderGuiHelper {
         float a = color.getAlpha();
 
         var pose = poseStack.last().pose();
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         buf.vertex(pose, left,  bottom, 0f).color(r, g, b, a).endVertex();
@@ -268,7 +269,7 @@ public class RenderGuiHelper {
         buf.vertex(pose, right, top,    0f).color(r, g, b, a).endVertex();
         buf.vertex(pose, left,  top,    0f).color(r, g, b, a).endVertex();
 
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
     }
 
     private static void drawResizeOutline(VROverlay overlay,
@@ -288,7 +289,7 @@ public class RenderGuiHelper {
         float a = color.getAlpha();
 
         var pose = poseStack.last().pose();
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         // top edge
@@ -300,10 +301,10 @@ public class RenderGuiHelper {
         // right edge
         emitRect(buf, pose, halfWidth - thickness, -halfHeight + thickness, halfWidth, halfHeight - thickness, r, g, b, a);
 
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
     }
 
-    private static void emitRect(BufferBuilder buf, Matrix4f pose,
+    private static void emitRect(McVertexBuilder buf, Matrix4f pose,
                                  float left, float bottom, float right, float top,
                                  float r, float g, float b, float a) {
         buf.vertex(pose, left,  bottom, 0f).color(r, g, b, a).endVertex();

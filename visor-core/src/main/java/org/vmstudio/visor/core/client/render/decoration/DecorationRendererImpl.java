@@ -103,6 +103,7 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
             stage.run();
             return;
         }
+        MC.renderBuffers().bufferSource().endBatch();
         McModelViewStack.push();
         McModelViewStack.identity();
         RenderSystem.applyModelViewMatrix();

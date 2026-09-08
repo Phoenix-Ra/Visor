@@ -1,7 +1,13 @@
 package org.vmstudio.visor.api.compatibility.mcversion.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.model.geom.ModelPart;
+//? if >=1.21 {
+import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -57,12 +63,68 @@ public class McRenderUtils {
 
     // ------- SHADERS -------
 
-    // 1.20.5 replaced the position_tex_color_normal shader with rendertype_clouds
     public static Supplier<ShaderInstance> positionTexColorNormalShader() {
         //? if >=1.20.5 {
         return GameRenderer::getRendertypeCloudsShader;
         //?} else {
         /*return GameRenderer::getPositionTexColorNormalShader;
+        *///?}
+    }
+
+    // ------- TIMING -------
+
+    public static float deltaFrameTicks() {
+        //? if >=1.21 {
+        return Minecraft.getInstance().getTimer().getGameTimeDeltaTicks();
+        //?} else {
+        /*return Minecraft.getInstance().getDeltaFrameTime();
+        *///?}
+    }
+
+    public static float partialTick() {
+        //? if >=1.21 {
+        return Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+        //?} else {
+        /*return Minecraft.getInstance().getFrameTime();
+        *///?}
+    }
+
+    // ------- MODEL PARTS -------
+
+    public static void renderModelPart(ModelPart part,
+                                       PoseStack poseStack,
+                                       VertexConsumer consumer,
+                                       int packedLight,
+                                       int packedOverlay) {
+        //? if >=1.21 {
+        part.render(poseStack, consumer, packedLight, packedOverlay, 0xFFFFFFFF);
+        //?} else {
+        /*part.render(poseStack, consumer, packedLight, packedOverlay, 1.0F, 1.0F, 1.0F, 1.0F);
+        *///?}
+    }
+
+    // ------- GAME RENDERER -------
+
+    public static void renderGame(GameRenderer renderer,
+                                  float partialTicks,
+                                  long nanoTime,
+                                  boolean renderLevel) {
+        //? if >=1.21 {
+        renderer.render(Minecraft.getInstance().getTimer(), renderLevel);
+        //?} else {
+        /*renderer.render(partialTicks, nanoTime, renderLevel);
+        *///?}
+    }
+
+    public static void renderItemActivationAnimation(GameRenderer renderer, float partialTicks) {
+        //? if >=1.21 {
+        Minecraft minecraft = Minecraft.getInstance();
+        renderer.renderItemActivationAnimation(
+                new GuiGraphics(minecraft, minecraft.renderBuffers().bufferSource()),
+                partialTicks
+        );
+        //?} else {
+        /*renderer.renderItemActivationAnimation(0, 0, partialTicks);
         *///?}
     }
 

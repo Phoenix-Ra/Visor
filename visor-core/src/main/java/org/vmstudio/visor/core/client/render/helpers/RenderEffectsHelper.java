@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -48,8 +49,7 @@ public class RenderEffectsHelper {
         if (alpha <= 0.0F) {
             return;
         }
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
+        McVertexBuilder bufferbuilder = McVertexBuilder.get();
         Matrix4f mat = fullscreenMatrix();
 
         RenderSystem.setShader(GameRenderer::getPositionShader);
@@ -64,7 +64,7 @@ public class RenderEffectsHelper {
         for (float[] corner : SCREEN_QUAD_CORNERS) {
             bufferbuilder.vertex(mat, corner[0], corner[1], 0.0F).endVertex();
         }
-        tesselator.end();
+        bufferbuilder.draw();
 
         RenderStateHelper.restoreAfterExternalRender();
     }
@@ -79,8 +79,7 @@ public class RenderEffectsHelper {
         wrap.prepare(proximity);
         ShaderInstance shader = wrap.getHandle();
 
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tesselator.getBuilder();
+        McVertexBuilder bufferbuilder = McVertexBuilder.get();
         Matrix4f mat = fullscreenMatrix();
 
         RenderSystem.setShader(() -> shader);
@@ -96,7 +95,7 @@ public class RenderEffectsHelper {
                     .uv(corner[0] * 0.5F + 0.5F, corner[1] * 0.5F + 0.5F)
                     .endVertex();
         }
-        tesselator.end();
+        bufferbuilder.draw();
 
         RenderStateHelper.restoreAfterExternalRender();
     }
@@ -198,7 +197,7 @@ public class RenderEffectsHelper {
                 .bindForSetup(TexturesHelper.getBlackTexture());
         RenderSystem.setShader(GameRenderer::getPositionShader);
 
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION);
 
         float scale = ClientContext.renderer.renderScale;
@@ -206,6 +205,6 @@ public class RenderEffectsHelper {
             buf.vertex(verts[i] * scale, verts[i + 1] * scale, 0F).endVertex();
         }
 
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
     }
 }

@@ -1,5 +1,16 @@
 package org.vmstudio.visor.compatibility.iris.mixin;
 
+//? if >=1.21 {
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+
+// Iris 1.8 deleted compat.sodium.impl.shader_overrides (SodiumPrograms rewrite)
+@Pseudo
+@Mixin(targets = "net.irisshaders.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides", remap = false)
+public class IrisChunkProgramOverridesMixin {
+}
+//?} else {
+/*
 import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;
@@ -117,3 +128,4 @@ public class IrisChunkProgramOverridesMixin {
         visor$passPrograms.clear();
     }
 }
+*///?}

@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects.hand;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -82,7 +83,7 @@ public class HandEffectCrosshair extends VRHandEffect {
         }
         float brightness = getBrightness(crossPos) * baseBrightness;
 
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
 
         // --- GL setup ---
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
@@ -136,7 +137,7 @@ public class HandEffectCrosshair extends VRHandEffect {
                 .color(brightness, brightness, brightness, 1f)
                 .endVertex();
 
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
 
         // --- Restore GL & pose ---
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);

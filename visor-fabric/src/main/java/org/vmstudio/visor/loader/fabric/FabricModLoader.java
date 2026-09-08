@@ -1,5 +1,6 @@
 package org.vmstudio.visor.loader.fabric;
 
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.netty.buffer.Unpooled;
@@ -86,24 +87,37 @@ public class FabricModLoader implements ModLoader {
                 .add(callback);
 
         if (!worldEventsRegistered) {
-            // Closest equivalent of AFTER_SOLID
-            WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, hitResult) -> {
-                fireCallbacks(RenderPipelineStage.AFTER_SOLID, context.matrixStack(), context.tickDelta());
-                return true; // don't cancel block outline
+            // Closest equivalent of AFTER_SOLID.
+            WorldRenderEvents.BEFORE_ENTITIES.register(context -> {
+                fireCallbacks(RenderPipelineStage.AFTER_SOLID, visor$poseStackOf(context), visor$partialTick(context));
             });
 
             // AFTER_TRANSLUCENT
             WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
-                fireCallbacks(RenderPipelineStage.AFTER_TRANSLUCENT, context.matrixStack(), context.tickDelta());
+                fireCallbacks(RenderPipelineStage.AFTER_TRANSLUCENT, visor$poseStackOf(context), visor$partialTick(context));
             });
 
             // AFTER_WORLD
             WorldRenderEvents.END.register(context -> {
-                fireCallbacks(RenderPipelineStage.AFTER_WORLD, context.matrixStack(), context.tickDelta());
+                fireCallbacks(RenderPipelineStage.AFTER_WORLD, visor$poseStackOf(context), visor$partialTick(context));
             });
 
             worldEventsRegistered = true;
         }
+    }
+
+    // matrixStack() is null for some events
+    private static PoseStack visor$poseStackOf(WorldRenderContext context) {
+        PoseStack poseStack = context.matrixStack();
+        return poseStack != null ? poseStack : new PoseStack();
+    }
+
+    private static float visor$partialTick(WorldRenderContext context) {
+        //? if >=1.21 {
+        return context.tickCounter().getGameTimeDeltaPartialTick(true);
+        //?} else {
+        /*return context.tickDelta();
+        *///?}
     }
 
     private void fireCallbacks(RenderPipelineStage stage, PoseStack poseStack, float partialTicks) {

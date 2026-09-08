@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.hand;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -322,7 +323,7 @@ public class VRHandRenderer {
         }
 
         // --- Render ---
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder builder = McVertexBuilder.get();
         RenderHelper.renderCuboid(
                 builder,
                 poseStack.last().pose(),
@@ -383,7 +384,7 @@ public class VRHandRenderer {
 
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         RenderHelper.renderCuboid(
-                Tesselator.getInstance().getBuilder(),
+                McVertexBuilder.get(),
                 poseStack.last().pose(),
                 start, end,
                 -0.02F, 0.02F,

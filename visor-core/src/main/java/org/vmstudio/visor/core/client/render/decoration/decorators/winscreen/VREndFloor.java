@@ -1,11 +1,9 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.winscreen;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.GameRenderer;
@@ -70,7 +68,7 @@ public final class VREndFloor {
         float y = -THICKNESS;
 
         Matrix4f pose = poseStack.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder bufferBuilder = McVertexBuilder.get();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         // top
@@ -107,12 +105,12 @@ public final class VREndFloor {
                 x, y, z, 2 * z, THICKNESS,
                 x, y, -z, 0, THICKNESS);
 
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        bufferBuilder.draw();
 
         poseStack.popPose();
     }
 
-    private static void quad(BufferBuilder bufferBuilder,
+    private static void quad(McVertexBuilder bufferBuilder,
                              Matrix4f pose,
                              int shade,
                              float x0, float y0, float z0, float u0, float v0,

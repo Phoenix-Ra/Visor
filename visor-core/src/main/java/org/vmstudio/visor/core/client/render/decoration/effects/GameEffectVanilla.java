@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.vmstudio.visor.api.client.render.VRRenderPass;
 import org.vmstudio.visor.api.client.render.decoration.VRDecorator;
@@ -22,7 +23,7 @@ public class GameEffectVanilla extends VRGameEffect {
     public void render(@NotNull VRRenderPass renderPass,
                        @NotNull PoseStack poseStack,
                        float partialTicks) {
-        MC.gameRenderer.renderItemActivationAnimation(0, 0, partialTicks);
+        McRenderUtils.renderItemActivationAnimation(MC.gameRenderer, partialTicks);
     }
 
     @Override

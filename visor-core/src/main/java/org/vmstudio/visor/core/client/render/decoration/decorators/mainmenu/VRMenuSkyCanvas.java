@@ -1,11 +1,9 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.mainmenu;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
@@ -250,7 +248,7 @@ public final class VRMenuSkyCanvas implements VREventListener {
             RenderSystem.setShaderTexture(0, whiteTex);
         }
 
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder builder = McVertexBuilder.get();
         float dashSpan = aim.distance - CURSOR_DASH_START;
         for (int i = 0; i < CURSOR_DASH_COUNT; i++) {
             float nearFrac = i / (float) CURSOR_DASH_COUNT;
@@ -288,7 +286,7 @@ public final class VRMenuSkyCanvas implements VREventListener {
             }
             markerQuad(builder, poseMatrix, 0, 0, -hitDistance, 0.35f, colorInt, 120);
 
-            BufferUploader.drawWithShader(builder.end());
+            builder.draw();
         }
 
         // --- restore GL ---
@@ -299,7 +297,7 @@ public final class VRMenuSkyCanvas implements VREventListener {
         poseStack.popPose();
     }
 
-    private static void markerQuad(BufferBuilder builder, Matrix4f poseMatrix, float cx, float cy, float z,
+    private static void markerQuad(McVertexBuilder builder, Matrix4f poseMatrix, float cx, float cy, float z,
                                    float halfSize, int[] color, int a) {
         builder.vertex(poseMatrix, cx - halfSize, cy - halfSize, z).uv(0f, 0f).color(color[0], color[1], color[2], a).endVertex();
         builder.vertex(poseMatrix, cx + halfSize, cy - halfSize, z).uv(1f, 0f).color(color[0], color[1], color[2], a).endVertex();

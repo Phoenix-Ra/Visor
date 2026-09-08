@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.provider;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -177,7 +178,8 @@ public class VisorScene implements AtumVRScene {
             RenderSystem.setShaderTexture(2, 0);
         }
 
-        MC.gameRenderer.render(
+        McRenderUtils.renderGame(
+                MC.gameRenderer,
                 context.partialTicks(),
                 context.nanoTime(),
                 context.renderLevel()

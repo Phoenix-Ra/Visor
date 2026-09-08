@@ -415,7 +415,11 @@ public class NeoForgeModLoader implements ModLoader {
         if (callbacks == null || callbacks.isEmpty()) return;
 
         PoseStack poseStack = event.getPoseStack();
-        float partialTicks = event.getPartialTick();
+        //? if >=1.21 {
+        float partialTicks = event.getPartialTick().getGameTimeDeltaPartialTick(true);
+        //?} else {
+        /*float partialTicks = event.getPartialTick();
+        *///?}
 
         for (RenderPipelineCallback callback : callbacks) {
             callback.render(poseStack, partialTicks);
@@ -424,7 +428,8 @@ public class NeoForgeModLoader implements ModLoader {
 
 
     private static RenderPipelineStage mapForgeStage(RenderLevelStageEvent.Stage forgeStage) {
-         if (forgeStage == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
+        // must stay ahead of entity rendering
+        if (forgeStage == RenderLevelStageEvent.Stage.AFTER_CUTOUT_BLOCKS) {
             return RenderPipelineStage.AFTER_SOLID;
         }
         if (forgeStage == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {

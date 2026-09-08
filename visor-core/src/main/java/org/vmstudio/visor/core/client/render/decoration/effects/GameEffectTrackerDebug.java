@@ -1,7 +1,7 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -121,8 +121,7 @@ public class GameEffectTrackerDebug extends VRGameEffect {
         RenderPoseHelper.applyCameraOrientation(renderPass, poseStack);
         Matrix4f pose = poseStack.last().pose();
 
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder builder = tesselator.getBuilder();
+        McVertexBuilder builder = McVertexBuilder.get();
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
         for (var entry : active.entrySet()) {
@@ -140,7 +139,7 @@ public class GameEffectTrackerDebug extends VRGameEffect {
             addAxis(builder, pose, center, projectDir(tracker.transformDirection(AXIS_Y), cos, sin), 64, 235, 90);  // Y green
             addAxis(builder, pose, center, projectDir(tracker.transformDirection(AXIS_Z), cos, sin), 66, 135, 245); // Z blue
         }
-        tesselator.end();
+        builder.draw();
 
         poseStack.popPose();
 
@@ -207,7 +206,7 @@ public class GameEffectTrackerDebug extends VRGameEffect {
         return null;
     }
 
-    private void addAxis(BufferBuilder builder, Matrix4f pose,
+    private void addAxis(McVertexBuilder builder, Matrix4f pose,
                          Vec3 center, Vec3 dir,
                          int r, int g, int b) {
         Vec3 end = center.add(dir.x * AXIS_LENGTH, dir.y * AXIS_LENGTH, dir.z * AXIS_LENGTH);
@@ -215,7 +214,7 @@ public class GameEffectTrackerDebug extends VRGameEffect {
     }
 
 
-    private void addBeam(BufferBuilder buf, Matrix4f pose,
+    private void addBeam(McVertexBuilder buf, Matrix4f pose,
                          Vec3 start, Vec3 end, float halfThick,
                          int r, int g, int b) {
         Vec3 forward = end.subtract(start);
@@ -247,7 +246,7 @@ public class GameEffectTrackerDebug extends VRGameEffect {
         quad(buf, pose, s3, s2, e2, e3, r, g, b);
     }
 
-    private void quad(BufferBuilder buf, Matrix4f pose,
+    private void quad(McVertexBuilder buf, Matrix4f pose,
                       Vec3 a, Vec3 b, Vec3 c, Vec3 d,
                       int r, int g, int bl) {
         vertex(buf, pose, a, r, g, bl);
@@ -256,7 +255,7 @@ public class GameEffectTrackerDebug extends VRGameEffect {
         vertex(buf, pose, d, r, g, bl);
     }
 
-    private void vertex(BufferBuilder buf, Matrix4f pose, Vec3 p, int r, int g, int b) {
+    private void vertex(McVertexBuilder buf, Matrix4f pose, Vec3 p, int r, int g, int b) {
         buf.vertex(pose, (float) p.x, (float) p.y, (float) p.z)
                 .color(r, g, b, 255)
                 .normal(0f, 1f, 0f)

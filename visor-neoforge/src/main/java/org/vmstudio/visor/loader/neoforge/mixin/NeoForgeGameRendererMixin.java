@@ -1,17 +1,21 @@
 package org.vmstudio.visor.loader.neoforge.mixin;
 
-import org.vmstudio.visor.core.client.render.VRRenderState;
-import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
-import net.neoforged.neoforge.client.event.ViewportEvent;
 import org.spongepowered.asm.mixin.Mixin;
+//? if <1.21 {
+/*import org.vmstudio.visor.core.client.render.VRRenderState;
+import net.minecraft.client.Camera;
+import net.neoforged.neoforge.client.event.ViewportEvent;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+*///?}
+
 
 @Mixin(GameRenderer.class)
 public class NeoForgeGameRendererMixin {
 
-    @Redirect(at = @At(value = "INVOKE",
+    //? if <1.21 {
+    /*@Redirect(at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/Camera;setAnglesInternal(FF)V", remap = false),
             method = "renderLevel")
     public void visor$keepVRAnglesInEyes(Camera camera, float yaw, float pitch) {
@@ -32,4 +36,5 @@ public class NeoForgeGameRendererMixin {
         }
         return 0F;
     }
+    *///?}
 }

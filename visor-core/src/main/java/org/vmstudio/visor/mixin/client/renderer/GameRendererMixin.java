@@ -34,6 +34,10 @@ import org.vmstudio.visor.api.client.settings.VRClientSettings;
 import org.vmstudio.visor.api.client.settings.enums.MirrorMode;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
+//? if >=1.21 {
+import net.minecraft.client.DeltaTracker;
+import org.joml.Quaternionf;
+//?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -147,10 +151,17 @@ public abstract class GameRendererMixin
 
 
 
-    @Shadow public abstract void render(float f, long l, boolean bl);
+    //? if >=1.21 {
+    @Shadow public abstract void render(DeltaTracker deltaTracker, boolean bl);
+
+    @Shadow
+    public abstract void renderItemActivationAnimation(GuiGraphics guiGraphics, float par1);
+    //?} else {
+    /*@Shadow public abstract void render(float f, long l, boolean bl);
 
     @Shadow
     public abstract void renderItemActivationAnimation(int i, int j, float par1);
+    *///?}
 
     /* ******************* *\
   //--------RENDERING--------\\
@@ -159,8 +170,14 @@ public abstract class GameRendererMixin
     /**
      * Cancels GUI rendering for VRWorld stage and render VR main menu room
      */
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getWindow()Lcom/mojang/blaze3d/platform/Window;", ordinal = 6), method = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V", cancellable = true)
+    //? if >=1.21 {
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getWindow()Lcom/mojang/blaze3d/platform/Window;", ordinal = 6), method = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V", cancellable = true)
+    public void visor$onRenderGUI(DeltaTracker deltaTracker, boolean renderWorldIn, CallbackInfo info) {
+        float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(true);
+    //?} else {
+    /*@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getWindow()Lcom/mojang/blaze3d/platform/Window;", ordinal = 6), method = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V", cancellable = true)
     public void visor$onRenderGUI(float partialTicks, long nanoTime, boolean renderWorldIn, CallbackInfo info) {
+    *///?}
 
         if (VRRenderState.getPhase().isNotVRWorld()) {
             // Proceed rendering GUI for Vanilla and VRGui stage
@@ -200,7 +217,11 @@ public abstract class GameRendererMixin
     /**
      * Draw GUI only after first level render
      */
-    @ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getWindow()Lcom/mojang/blaze3d/platform/Window;", shift = Shift.AFTER, ordinal = 6), method = "render(FJZ)V", ordinal = 0, argsOnly = true)
+    //? if >=1.21 {
+    @ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getWindow()Lcom/mojang/blaze3d/platform/Window;", shift = Shift.AFTER, ordinal = 6), method = "render(Lnet/minecraft/client/DeltaTracker;Z)V", ordinal = 0, argsOnly = true)
+    //?} else {
+    /*@ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getWindow()Lcom/mojang/blaze3d/platform/Window;", shift = Shift.AFTER, ordinal = 6), method = "render(FJZ)V", ordinal = 0, argsOnly = true)
+    *///?}
     private boolean visor$vrGuiVisibility(boolean doRender) {
         if (VRRenderState.getPhase().isVanilla()) {
             return doRender;
@@ -307,8 +328,13 @@ public abstract class GameRendererMixin
         info.setReturnValue(posestack.last().pose());
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;viewport(IIII)V", remap = false, shift = Shift.AFTER), method = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V")
+    //? if >=1.21 {
+    @Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;viewport(IIII)V", remap = false, shift = Shift.AFTER), method = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V")
+    public void visor$matrix(DeltaTracker deltaTracker, boolean renderWorldIn, CallbackInfo info) {
+    //?} else {
+    /*@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;viewport(IIII)V", remap = false, shift = Shift.AFTER), method = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V")
     public void visor$matrix(float partialTicks, long nanoTime, boolean renderWorldIn, CallbackInfo info) {
+    *///?}
         if(VisorState.get().isNotActive()) return;
         this.resetProjectionMatrix(
                 this.getProjectionMatrix(
@@ -397,7 +423,19 @@ public abstract class GameRendererMixin
         visor$pickingHand = null;
     }
 
+    //? if >=1.21 {
+    // 1.21 builds the frustum from Camera.rotation() instead of its euler angles; identity neutralises it
     @Redirect(at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/Camera;rotation()Lorg/joml/Quaternionf;"),
+            method = "renderLevel")
+    public Quaternionf visor$noVanillaCameraRotation(Camera camera) {
+        if (VRRenderState.getPhase().isVanilla()) {
+            return camera.rotation();
+        }
+        return new Quaternionf();
+    }
+    //?} else {
+    /*@Redirect(at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/Camera;getXRot()F"),
             method = "renderLevel")
     public float visor$noVanillaCameraPitch(Camera camera) {
@@ -417,11 +455,18 @@ public abstract class GameRendererMixin
         // -180 cancels the +180 vanilla
         return -180F;
     }
+    *///?}
 
-    //? if >=1.20.5 {
+    //? if >=1.21 {
     @ModifyExpressionValue(method = "renderLevel",
+            at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;rotation(Lorg/joml/Quaternionfc;)Lorg/joml/Matrix4f;", remap = false))
+    public Matrix4f visor$orientCameraToPass(Matrix4f frustumMatrix) {
+    //?} elif >=1.20.5 {
+    /*@ModifyExpressionValue(method = "renderLevel",
             at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;rotationXYZ(FFF)Lorg/joml/Matrix4f;", remap = false))
     public Matrix4f visor$orientCameraToPass(Matrix4f frustumMatrix) {
+    *///?}
+    //? if >=1.20.5 {
         if (VRRenderState.getPhase().isNotVanilla()) {
             RenderPoseHelper.applyCameraOrientation(
                     VRRenderState.getRenderPass(), frustumMatrix
@@ -461,9 +506,11 @@ public abstract class GameRendererMixin
     }
 
     @Inject(at = @At(value = "TAIL"), method = "renderLevel")
-    //? if >=1.20.5 {
-    public void visor$restoreCamera(float f, long j, CallbackInfo i) {
-    //?} else {
+    //? if >=1.21 {
+    public void visor$restoreCamera(DeltaTracker deltaTracker, CallbackInfo i) {
+    //?} elif >=1.20.5 {
+    /*public void visor$restoreCamera(float f, long j, CallbackInfo i) {
+    *///?} else {
     /*public void visor$restoreCamera(float f, long j, PoseStack p, CallbackInfo i) {
     *///?}
         if(VRRenderState.getPhase().isNotVanilla()) {
@@ -612,9 +659,11 @@ public abstract class GameRendererMixin
     }
 
     @Inject(at = @At("TAIL"), method = "renderLevel")
-    //? if >=1.20.5 {
-    public void visor$releaseHiddenAreaMask(float f, long l, CallbackInfo ci) {
-    //?} else {
+    //? if >=1.21 {
+    public void visor$releaseHiddenAreaMask(DeltaTracker deltaTracker, CallbackInfo ci) {
+    //?} elif >=1.20.5 {
+    /*public void visor$releaseHiddenAreaMask(float f, long l, CallbackInfo ci) {
+    *///?} else {
     /*public void visor$releaseHiddenAreaMask(float f, long l, PoseStack poseStack, CallbackInfo ci) {
     *///?}
         if(VRRenderState.getPhase().isNotVanilla()) {
@@ -629,9 +678,15 @@ public abstract class GameRendererMixin
 
     //ITEM ACTIVATION ANIMATION
     @Redirect(method = "renderItemActivationAnimation", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;scale(FFF)V"))
-    private void visor$skipActivationScale(PoseStack poseStack, float x, float y, float z, int width, int height,
+    //? if >=1.21 {
+    private void visor$skipActivationScale(PoseStack poseStack, float x, float y, float z,
+                                   GuiGraphics guiGraphics, float partialTicks
+    ) {
+    //?} else {
+    /*private void visor$skipActivationScale(PoseStack poseStack, float x, float y, float z, int width, int height,
                                    float partialTicks
     ) {
+    *///?}
         if (VRRenderState.getPhase().isVanilla()) {
             poseStack.scale(x, y, z);
             return;
@@ -657,12 +712,21 @@ public abstract class GameRendererMixin
         poseStack.mulPose(Axis.YP.rotation(-cameraPose.getYaw()));
         poseStack.mulPose(Axis.XP.rotation(-cameraPose.getPitch()));
     }
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemActivationAnimation(IIF)V"), method = "render(FJZ)V")
+    //? if >=1.21 {
+    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemActivationAnimation(Lnet/minecraft/client/gui/GuiGraphics;F)V"), method = "render(Lnet/minecraft/client/DeltaTracker;Z)V")
+    private void visor$noItemActivationAnimInGUI(GameRenderer instance, GuiGraphics guiGraphics, float f) {
+        if(VRRenderState.getPhase().isVanilla()) {
+            renderItemActivationAnimation(guiGraphics, f);
+        }
+    }
+    //?} else {
+    /*@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemActivationAnimation(IIF)V"), method = "render(FJZ)V")
     private void visor$noItemActivationAnimInGUI(GameRenderer instance, int i, int j, float f) {
         if(VRRenderState.getPhase().isVanilla()) {
             renderItemActivationAnimation(i, j, f);
         }
     }
+    *///?}
     @Redirect(method = "renderItemActivationAnimation", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
     private void visor$noItemTranslate(PoseStack poseStack, float x, float y, float z) {
         if(VRRenderState.getPhase().isVanilla()) {

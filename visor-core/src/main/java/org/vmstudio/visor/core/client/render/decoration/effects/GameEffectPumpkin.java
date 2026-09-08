@@ -1,13 +1,12 @@
 package org.vmstudio.visor.core.client.render.decoration.effects;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -37,7 +36,7 @@ import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 public class GameEffectPumpkin extends VRGameEffect {
 
     public static final String ID = "pumpkin";
-    private static final ResourceLocation PUMPKIN_BLUR_LOCATION = new ResourceLocation("textures/misc/pumpkinblur.png");
+    private static final ResourceLocation PUMPKIN_BLUR_LOCATION = McVersionUtils.newResourceLoc("textures/misc/pumpkinblur.png");
 
     private static final float FACE_DISTANCE = 0.24F;
     private static final float FACE_RADIUS = 0.24F;
@@ -118,20 +117,20 @@ public class GameEffectPumpkin extends VRGameEffect {
         float uv0 = 0.5F - 0.5F * BORDER_SCALE;
         float uv1 = 0.5F + 0.5F * BORDER_SCALE;
 
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         buf.vertex(matrix, x0, y0, center.z).uv(uv0, uv1).endVertex();
         buf.vertex(matrix, x1, y0, center.z).uv(uv1, uv1).endVertex();
         buf.vertex(matrix, x1, y1, center.z).uv(uv1, uv0).endVertex();
         buf.vertex(matrix, x0, y1, center.z).uv(uv0, uv0).endVertex();
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
     }
 
     private void updateOpacity() {
         float target = isMasked() ? 1.0F : 0.0F;
 
         opacity = Mth.lerp(
-                Math.min(1.0F, MC.getDeltaFrameTime() * FADE_SPEED),
+                Math.min(1.0F, McRenderUtils.deltaFrameTicks() * FADE_SPEED),
                 opacity,
                 target
         );

@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.decorators.mainmenu;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -23,7 +24,7 @@ public final class VRMenuFloor {
     }
 
     public static void render(PoseStack poseStack) {
-        BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+        McVertexBuilder bufferbuilder = McVertexBuilder.get();
         Vector2f area = ClientUtils.getPlayAreaSize();
 
         for (int i = 0; i < 2; i++) {
@@ -63,7 +64,7 @@ public final class VRMenuFloor {
                     .color(r, g, b, 255)
                     .normal(0, 1, 0).endVertex();
 
-            BufferUploader.drawWithShader(bufferbuilder.end());
+            bufferbuilder.draw();
 
             poseStack.popPose();
         }

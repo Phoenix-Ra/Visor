@@ -1,6 +1,10 @@
 package org.vmstudio.visor.mixin.client.renderer.entity;
 
-import net.minecraft.client.renderer.entity.MobRenderer;
+//? if >=1.21 {
+import net.minecraft.client.renderer.entity.EntityRenderer;
+//?} else {
+/*import net.minecraft.client.renderer.entity.MobRenderer;
+*///?}
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -13,7 +17,11 @@ import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.core.client.player.VRClientPlayers;
 import org.vmstudio.visor.core.client.render.VRRenderState;
 
-@Mixin(MobRenderer.class)
+//? if >=1.21 {
+@Mixin(EntityRenderer.class)
+//?} else {
+/*@Mixin(MobRenderer.class)
+*///?}
 public class MobRendererMixin {
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getRopeHoldPosition(F)Lnet/minecraft/world/phys/Vec3;"), method = "renderLeash")
     public Vec3 visor$vrRenderLeash(Entity instance, float partialTick) {

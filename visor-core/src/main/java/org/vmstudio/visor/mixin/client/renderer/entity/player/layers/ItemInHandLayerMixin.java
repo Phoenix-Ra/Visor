@@ -1,5 +1,6 @@
 package org.vmstudio.visor.mixin.client.renderer.entity.player.layers;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -83,7 +84,7 @@ public abstract class ItemInHandLayerMixin extends RenderLayer {
                 ? InteractionHand.MAIN_HAND
                 : InteractionHand.OFF_HAND;
         float equipProgress = ((ItemInHandRendererExtension) MC.gameRenderer.itemInHandRenderer)
-                .visor$getEquipProgress(mcHand, MC.getFrameTime());
+                .visor$getEquipProgress(mcHand, McRenderUtils.partialTick());
 
         //@TODO rework this since the change is globally applied and might be a problem for addons to work with
         if (!VRRenderState.isSelfModelRender(entity)) {
@@ -122,7 +123,7 @@ public abstract class ItemInHandLayerMixin extends RenderLayer {
         }
 
         ClientContext.handRenderer.applyItemHandPose(
-                player, hand, itemStack, poseStack, equipProgress, MC.getFrameTime()
+                player, hand, itemStack, poseStack, equipProgress, McRenderUtils.partialTick()
         );
     }
 }

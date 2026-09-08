@@ -1,6 +1,7 @@
 package org.vmstudio.visor.mixin.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.MainTarget;
@@ -69,12 +70,18 @@ public abstract class MinecraftMixin implements MinecraftExtension {
     @Shadow
     private boolean pause;
 
+    //? if >=1.21 {
+    @Final
     @Shadow
+    private DeltaTracker.Timer timer;
+    //?} else {
+    /*@Shadow
     private float pausePartialTick;
 
     @Final
     @Shadow
     private Timer timer;
+    *///?}
 
     @Final
     @Shadow
@@ -211,7 +218,11 @@ public abstract class MinecraftMixin implements MinecraftExtension {
      * @param renderLevel s
      * @return s
      */
-    @ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V"), method = "runTick")
+    //? if >=1.21 {
+    @ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), method = "runTick")
+    //?} else {
+    /*@ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V"), method = "runTick")
+    *///?}
     public boolean visor$startVRGuiPhase(boolean renderLevel) {
         if (VisorState.get().isActive()) {
 
@@ -233,8 +244,8 @@ public abstract class MinecraftMixin implements MinecraftExtension {
      * @param ci          s
      * @param nanoTime    s
      */
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/ProfilerFiller;pop()V", ordinal = 4, shift = Shift.AFTER), method = "runTick", locals = LocalCapture.CAPTURE_FAILHARD)
-    public void visor$renderVR(boolean renderLevel, CallbackInfo ci, long nanoTime) {
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/ProfilerFiller;pop()V", ordinal = 4, shift = Shift.AFTER), method = "runTick")
+    public void visor$renderVR(boolean renderLevel, CallbackInfo ci, @Local(ordinal = 0) long nanoTime) {
         if (ClientContext.visor != null) {
             ClientContext.visor
                     .renderVR(
@@ -607,6 +618,11 @@ public abstract class MinecraftMixin implements MinecraftExtension {
 
     @Override
     public float visor$getPartialTicks() {
-        return pause ? pausePartialTick : this.timer.partialTick;
+        //? if >=1.21 {
+        // 1.21 folded Minecraft.pausePartialTick into DeltaTracker$Timer; true = skip the frozen->1.0 branch
+        return this.timer.getGameTimeDeltaPartialTick(true);
+        //?} else {
+        /*return pause ? pausePartialTick : this.timer.partialTick;
+        *///?}
     }
 }

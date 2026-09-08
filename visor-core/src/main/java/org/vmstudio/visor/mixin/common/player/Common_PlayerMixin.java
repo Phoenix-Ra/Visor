@@ -17,7 +17,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
+//? if >=1.21 {
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+//?} else {
+/*import net.minecraft.world.item.enchantment.Enchantments;
+*///?}
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -229,7 +234,25 @@ public abstract class Common_PlayerMixin extends Common_LivingEntityMixin
     }
 
     // EnchantmentHelper for offhand
+    //? if >=1.21 {
     @WrapOperation(method = "attack", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/player/Player;getKnockback(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)F"))
+    private float visor$knockback(Player self, Entity target, DamageSource damageSource,
+                                  Operation<Float> original) {
+        VRPlayer vrPlayer = VisorAPI.getVRPlayer(self);
+        if (vrPlayer == null || visor$attackHand(vrPlayer) != HandType.OFFHAND) {
+            return original.call(self, target, damageSource);
+        }
+        float base = visor$withOffhandAttributes(
+                () -> (float) self.getAttributeValue(Attributes.ATTACK_KNOCKBACK)
+        );
+        return self.level() instanceof ServerLevel serverLevel
+                ? EnchantmentHelper.modifyKnockback(serverLevel, self.getOffhandItem(),
+                        target, damageSource, base)
+                : base;
+    }
+    //?} else {
+    /*@WrapOperation(method = "attack", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getKnockbackBonus(Lnet/minecraft/world/entity/LivingEntity;)I"))
     private int visor$knockback(LivingEntity selfEntity, Operation<Integer> original) {
         if(!(selfEntity instanceof Player self)){
@@ -244,6 +267,7 @@ public abstract class Common_PlayerMixin extends Common_LivingEntityMixin
         }
         return original.call(selfEntity);
     }
+    *///?}
 
     // knockback for living entities targets
     @WrapOperation(method = "attack", at = @At(value = "INVOKE",

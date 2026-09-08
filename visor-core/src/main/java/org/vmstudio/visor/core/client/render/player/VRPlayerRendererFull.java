@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.player;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -159,10 +160,10 @@ public class VRPlayerRendererFull extends PlayerRenderer {
 
         ResourceLocation skin = this.getTextureLocation(player);
         var consumer = buffer.getBuffer(RenderType.entityTranslucent(skin));
-        arm.render(poseStack, consumer, combinedLight,
-                OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-        sleeve.render(poseStack, consumer, combinedLight,
-                OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        McRenderUtils.renderModelPart(arm, poseStack, consumer, combinedLight,
+                OverlayTexture.NO_OVERLAY);
+        McRenderUtils.renderModelPart(sleeve, poseStack, consumer, combinedLight,
+                OverlayTexture.NO_OVERLAY);
 
         RenderSystem.disableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.tasks.types;
 
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import org.vmstudio.visor.api.client.input.HapticFeedback;
 import lombok.Getter;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
@@ -107,7 +108,7 @@ public class TaskRoomConsume extends VisorTask {
             }
 
             // Reset consumption state per hand once the item's own use time has passed
-            long useTimeMs = (long) foodItem.getUseDuration() * MILLIS_PER_TICK;
+            long useTimeMs = (long) McVersionUtils.useDuration(foodItem, player) * MILLIS_PER_TICK;
             if (Util.getMillis() - eatStartMap.getOrDefault(hand, 0L) > useTimeMs) {
                 consuming.put(hand, false);
             }

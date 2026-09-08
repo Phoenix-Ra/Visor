@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.gui.screens.overlayoptions;
 
+import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -406,7 +407,7 @@ public class OptionsScreenRegion extends OptionsScreen<OverlayOptionsScreenRegio
         float vMax = (float) target.viewHeight / (float) target.height;
 
         Matrix4f pose = gui.pose().last().pose();
-        BufferBuilder buf = Tesselator.getInstance().getBuilder();
+        McVertexBuilder buf = McVertexBuilder.get();
         buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         // bottom-left
         buf.vertex(pose, previewX, previewY + previewH, 0).uv(0.0f, 0.0f).endVertex();
@@ -416,7 +417,7 @@ public class OptionsScreenRegion extends OptionsScreen<OverlayOptionsScreenRegio
         buf.vertex(pose, previewX + previewW, previewY, 0).uv(uMax, vMax).endVertex();
         // top-left
         buf.vertex(pose, previewX, previewY, 0).uv(0.0f, vMax).endVertex();
-        BufferUploader.drawWithShader(buf.end());
+        buf.draw();
 
         RenderSystem.disableBlend();
         RenderSystem.enableDepthTest();
