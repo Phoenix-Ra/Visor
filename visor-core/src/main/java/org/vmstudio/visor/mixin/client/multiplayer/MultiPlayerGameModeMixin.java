@@ -1,9 +1,11 @@
 package org.vmstudio.visor.mixin.client.multiplayer;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerGamePacketListener;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.vmstudio.visor.api.client.player.pose.VRPlayerPoseClient;
@@ -139,6 +141,19 @@ public abstract class MultiPlayerGameModeMixin {
             );
         }
     }
+
+
+    //? if >=1.20.5 {
+    @ModifyExpressionValue(method = "performUseItemOn", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/world/InteractionHand;MAIN_HAND:Lnet/minecraft/world/InteractionHand;",
+            opcode = Opcodes.GETSTATIC))
+    private InteractionHand visor$vrBlockUseHand(InteractionHand original) {
+        if (VisorState.get().isNotActive() || !VRServerSettings.isTwoHandedVR()) {
+            return original;
+        }
+        return ClientContext.localPlayer.getActiveHand().asInteractionHand();
+    }
+    //?}
 
 
     /* ************************* *\

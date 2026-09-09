@@ -1,5 +1,9 @@
 package org.vmstudio.visor.mixin.common.player;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.world.InteractionHand;
+import org.objectweb.asm.Opcodes;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 
 import me.phoenixra.atumconfig.api.tuples.PairRecord;
@@ -104,9 +108,8 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeE
     /* ***************************************** *\
   //--------TWO HANDED VR (OFFHAND SUPPORT)--------\\
     \* ***************************************** */
-    @Redirect(method = "destroyBlock", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/server/level/ServerPlayer;getMainHandItem()Lnet/minecraft/world/item/ItemStack;"))
-    public ItemStack visor$destroyBlock(ServerPlayer player) {
+    @Unique
+    private ItemStack visor$vrHandItem(ServerPlayer player) {
         ItemStack forced = CommonUtils.FORCED_HAND_ITEM.get();
         if (forced != null) return forced;
         if(!VRServerSettings.isTwoHandedVR()) return player.getMainHandItem();
@@ -120,6 +123,37 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeE
             return player.getMainHandItem();
         }
     }
+
+    @Redirect(method = "destroyBlock", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/server/level/ServerPlayer;getMainHandItem()Lnet/minecraft/world/item/ItemStack;"))
+    public ItemStack visor$destroyBlock(ServerPlayer player) {
+        return visor$vrHandItem(player);
+    }
+
+    //? if >=1.21 {
+    @Redirect(method = "handleBlockBreakAction", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/server/level/ServerPlayer;getMainHandItem()Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack visor$hitBlockHandItem(ServerPlayer player) {
+        return visor$vrHandItem(player);
+    }
+    //?}
+
+    //? if >=1.20.5 {
+    @ModifyExpressionValue(method = "useItemOn", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/world/InteractionHand;MAIN_HAND:Lnet/minecraft/world/InteractionHand;",
+            opcode = Opcodes.GETSTATIC))
+    private InteractionHand visor$vrBlockUseHand(InteractionHand original,
+                                                 @Local(argsOnly = true) ServerPlayer player) {
+        if (!VRServerSettings.isTwoHandedVR()) {
+            return original;
+        }
+        VRPlayer vrPlayer = VisorAPI.getVRPlayer(player);
+        if (vrPlayer == null) {
+            return original;
+        }
+        return vrPlayer.getActiveHand().asInteractionHand();
+    }
+    //?}
 
     /* ************************* *\
   //--------BETTER SWINGING--------\\
