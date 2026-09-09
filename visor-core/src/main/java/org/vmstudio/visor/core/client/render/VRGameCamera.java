@@ -1,6 +1,8 @@
 package org.vmstudio.visor.core.client.render;
 
-import com.mojang.math.Axis;
+//? if <1.21 {
+/*import com.mojang.math.Axis;
+*///?}
 import org.vmstudio.visor.api.common.player.VRPose;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
 import org.vmstudio.visor.api.client.render.VRRenderPass;
@@ -85,10 +87,7 @@ public class VRGameCamera extends Camera {
         this.getUpVector().set(upVec.x, upVec.y, upVec.z);
         this.getLeftVector().set(leftVec.x, leftVec.y, leftVec.z);
 
-        // Build rotation quaternion: Yaw then Pitch
-        this.rotation().identity()
-                .mul(Axis.YP.rotationDegrees(-this.yRot))
-                .mul(Axis.XP.rotationDegrees( this.xRot));
+        applyPoseRotation(cameraElement);
     }
 
     private void setupSpectatedVR(Entity entity) {
@@ -112,9 +111,19 @@ public class VRGameCamera extends Camera {
         this.getUpVector().set(upVec.x, upVec.y, upVec.z);
         this.getLeftVector().set(leftVec.x, leftVec.y, leftVec.z);
 
-        this.rotation().identity()
+        applyPoseRotation(hmd);
+    }
+
+    // 1.21 flipped the Camera basis to -Z forward / -X left, so rotation()
+    // is no longer the yaw/pitch
+    private void applyPoseRotation(VRPose pose) {
+        //? if >=1.21 {
+        pose.getRotation().getNormalizedRotation(this.rotation());
+        //?} else {
+        /*this.rotation().identity()
                 .mul(Axis.YP.rotationDegrees(-this.yRot))
                 .mul(Axis.XP.rotationDegrees( this.xRot));
+        *///?}
     }
 
 }

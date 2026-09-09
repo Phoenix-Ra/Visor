@@ -114,7 +114,11 @@ public class PlayerRenderMixins {
 
             float yaw = (float) Math.atan2(dir.x, dir.z);
             float pitch = (float) -Math.asin(dir.y);
-            return new Quaternionf().rotationYXZ(yaw, pitch, 0F);
+            //? if >=1.21 {
+            return new Quaternionf().rotationYXZ(yaw + (float) Math.PI, -pitch, 0F);
+            //?} else {
+            /*return new Quaternionf().rotationYXZ(yaw, pitch, 0F);
+            *///?}
         }
 
 
