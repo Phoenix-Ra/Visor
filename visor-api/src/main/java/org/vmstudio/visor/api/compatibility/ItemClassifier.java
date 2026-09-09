@@ -18,14 +18,7 @@ public enum ItemClassifier {
     MACE(ItemClassifier::isMace),
     SPEAR(ItemClassifier::isSpear),
     FOOD_STICK((itemStack) -> itemStack.getItem() instanceof FoodOnAStickItem),
-    THROWABLE((itemStack) -> {
-        Item item = itemStack.getItem();
-        return item instanceof SnowballItem
-                || item instanceof EggItem
-                || item instanceof SplashPotionItem
-                || item instanceof LingeringPotionItem
-                || item instanceof FireChargeItem;
-    });
+    THROWABLE(ItemClassifier::isThrowable);
 
 
     @Getter
@@ -79,6 +72,20 @@ public enum ItemClassifier {
         //?} else {
         /*return false;
         *///?}
+    }
+
+    private static boolean isThrowable(ItemStack itemStack) {
+        Item item = itemStack.getItem();
+        //? if >=1.20.5 {
+        if (item instanceof WindChargeItem) {
+            return true;
+        }
+        //?}
+        return item instanceof SnowballItem
+                || item instanceof EggItem
+                || item instanceof SplashPotionItem
+                || item instanceof LingeringPotionItem
+                || item instanceof FireChargeItem;
     }
 
     private static boolean isSpear(ItemStack itemStack) {
