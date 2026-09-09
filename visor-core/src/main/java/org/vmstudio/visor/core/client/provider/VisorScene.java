@@ -51,10 +51,6 @@ public class VisorScene implements AtumVRScene {
         var renderContext = (RenderContext) context;
         var profiler =  renderContext.profiler();
 
-        // pop pose pushed in onGameRenderStart method
-        McModelViewStack.pop();
-
-
         RenderSystem.depthMask(true);
         RenderSystem.applyModelViewMatrix();
 

@@ -118,63 +118,64 @@ public class VROverlayManagerImpl implements VROverlayManager {
                 GlStateManager.DestFactor.ONE
         );
 
-        // --- Render  ---
-        for(var overlay : preparedOverlays){
-            RenderTarget target = overlay.getRenderTarget();
-            if(target == null){
-                //shouldn't happen at all
-                throw new RuntimeException("Tried to render overlay quad with null renderTarget: "+overlay.getId());
-            }
-            profiler.push("VROverlay Texture: " + overlay.getId());
+        try {
+            // --- Render  ---
+            for(var overlay : preparedOverlays){
+                RenderTarget target = overlay.getRenderTarget();
+                if(target == null){
+                    //shouldn't happen at all
+                    throw new RuntimeException("Tried to render overlay quad with null renderTarget: "+overlay.getId());
+                }
+                profiler.push("VROverlay Texture: " + overlay.getId());
 
-            if(overlay instanceof VROverlayScreen overlayScreen) {
-                //apply clean render target
-                MC.mainRenderTarget = target;
-                target.clear(Minecraft.ON_OSX);
-                target.bindWrite(true);
+                if(overlay instanceof VROverlayScreen overlayScreen) {
+                    //apply clean render target
+                    MC.mainRenderTarget = target;
+                    target.clear(Minecraft.ON_OSX);
+                    target.bindWrite(true);
 
-                //setup projection if changed
-                if(prevOverlayWidth != overlayScreen.width
-                        || prevOverlayHeight != overlayScreen.height) {
-                    projection.setOrtho(
-                            0,
-                            overlayScreen.width, overlayScreen.height,
-                            0,
-                            1000.0F, 21000.0F
+                    //setup projection if changed
+                    if(prevOverlayWidth != overlayScreen.width
+                            || prevOverlayHeight != overlayScreen.height) {
+                        projection.setOrtho(
+                                0,
+                                overlayScreen.width, overlayScreen.height,
+                                0,
+                                1000.0F, 21000.0F
+                        );
+                        RenderSystem.setProjectionMatrix(projection, VertexSorting.ORTHOGRAPHIC_Z);
+                        prevOverlayWidth = overlayScreen.width;
+                        prevOverlayHeight = overlayScreen.height;
+                    }
+
+                    //render overlay texture
+                    McGuiUtils.renderWithTooltip(
+                            overlayScreen,
+                            guiGraphics,
+                            overlayScreen.getMouseX(),
+                            overlayScreen.getMouseY(),
+                            partialTicks
                     );
-                    RenderSystem.setProjectionMatrix(projection, VertexSorting.ORTHOGRAPHIC_Z);
-                    prevOverlayWidth = overlayScreen.width;
-                    prevOverlayHeight = overlayScreen.height;
+                    guiGraphics.flush();
+
+                }else if(overlay instanceof VROverlayFrameBuffer overlayFrameBuffer){
+                    // rendering is fully handled by VROverlayFrameBuffer,
+                    // so, just render() is called,
+                    // and let it do the rest
+                    overlayFrameBuffer.render(partialTicks);
+                }else{
+                    throw new RuntimeException("Tried to render overlay of unsupported abstract class: "+overlay.getId());
                 }
 
-                //render overlay texture
-                McGuiUtils.renderWithTooltip(
-                        overlayScreen,
-                        guiGraphics,
-                        overlayScreen.getMouseX(),
-                        overlayScreen.getMouseY(),
-                        partialTicks
-                );
-                guiGraphics.flush();
-
-            }else if(overlay instanceof VROverlayFrameBuffer overlayFrameBuffer){
-                // rendering is fully handled by VROverlayFrameBuffer,
-                // so, just render() is called,
-                // and let it do the rest
-                overlayFrameBuffer.render(partialTicks);
-            }else{
-                throw new RuntimeException("Tried to render overlay of unsupported abstract class: "+overlay.getId());
+                profiler.pop();
+                GLUtils.checkGLError("post VROverlay texture: "+overlay.getId());
             }
 
-            profiler.pop();
-            GLUtils.checkGLError("post VROverlay texture: "+overlay.getId());
+        } finally {
+            // --- Restore ---
+            RenderSystem.restoreProjectionMatrix();
+            McModelViewStack.pop();
         }
-
-        // --- Restore ---
-        RenderSystem.restoreProjectionMatrix();
-
-        McModelViewStack.pop();
-
     }
 
 

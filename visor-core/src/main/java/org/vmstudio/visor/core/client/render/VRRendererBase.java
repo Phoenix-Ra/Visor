@@ -1,7 +1,5 @@
 package org.vmstudio.visor.core.client.render;
 
-import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import lombok.Setter;
@@ -117,9 +115,6 @@ public abstract class VRRendererBase implements VRRenderer {
 
         MC.mainRenderTarget.clear(Minecraft.ON_OSX);
         MC.mainRenderTarget.bindWrite(true);
-
-        // push pose to pop it in scene
-        McModelViewStack.push();
 
         ((GameRendererExtension)MC.gameRenderer).visor$setVRGuiVisible(
                 renderLevel && MC.getEntityRenderDispatcher().camera != null

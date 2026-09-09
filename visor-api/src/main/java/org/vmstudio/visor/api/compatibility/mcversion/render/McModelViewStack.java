@@ -4,9 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 /**
  * Cross-mc-version facade over the GL model-view stack.
- *
- * <p>Its own class because the stack is the part of the render state that keeps changing shape:
- * a {@code PoseStack} through 1.20.4, a JOML {@code Matrix4fStack} from 1.20.5.</p>
  */
 public class McModelViewStack {
     private McModelViewStack() {

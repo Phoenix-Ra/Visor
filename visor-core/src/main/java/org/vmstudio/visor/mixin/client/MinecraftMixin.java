@@ -6,8 +6,10 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.MainTarget;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.world.item.ItemStack;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
 import org.vmstudio.visor.api.server.VRServerSettings;
 import org.vmstudio.visor.core.client.render.context.PreRenderContext;
 import org.vmstudio.visor.core.client.render.context.RenderContext;
@@ -42,6 +44,8 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.function.Consumer;
 
 import org.vmstudio.visor.core.client.VisorState;
 
@@ -212,29 +216,39 @@ public abstract class MinecraftMixin implements MinecraftExtension {
     }
 
     /**
-     * Modifies vanilla GameRenderer.render() call
+     * Wraps vanilla GameRenderer.render() call
      * to update renderer state and start VRGui phase instead
      *
      * @param renderLevel s
-     * @return s
      */
     //? if >=1.21 {
-    @ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), method = "runTick")
+    @WrapOperation(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), method = "runTick", require = 1)
+    public void visor$startVRGuiPhase(GameRenderer instance, DeltaTracker deltaTracker, boolean renderLevel, Operation<Void> original) {
+        visor$renderVRGuiPhase(renderLevel, level -> original.call(instance, deltaTracker, level));
+    }
     //?} else {
-    /*@ModifyArg(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V"), method = "runTick")
+    /*@WrapOperation(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(FJZ)V"), method = "runTick", require = 1)
+    public void visor$startVRGuiPhase(GameRenderer instance, float partialTicks, long nanoTime, boolean renderLevel, Operation<Void> original) {
+        visor$renderVRGuiPhase(renderLevel, level -> original.call(instance, partialTicks, nanoTime, level));
+    }
     *///?}
-    public boolean visor$startVRGuiPhase(boolean renderLevel) {
-        if (VisorState.get().isActive()) {
 
-            ClientContext.renderer.onGameRenderStart(renderLevel);
-
-            if (VRRenderState.getPhase().isVRGui()) {
-                return false; //disable level rendering
-            } else {
-                return renderLevel; //fallback on exception
-            }
+    private void visor$renderVRGuiPhase(boolean renderLevel, Consumer<Boolean> render) {
+        if (VisorState.get().isNotActive()) {
+            render.accept(renderLevel);
+            return;
         }
-        return renderLevel;
+        ClientContext.renderer.onGameRenderStart(renderLevel);
+        boolean level = renderLevel && !VRRenderState.getPhase().isVRGui(); //disabled in VRGui phase, fallback on exception
+
+        // keeps visor$matrix's identity() off the model-view base
+        McModelViewStack.push();
+        try {
+            render.accept(level);
+        } finally {
+            McModelViewStack.pop();
+            RenderSystem.applyModelViewMatrix();
+        }
     }
 
     /**
