@@ -1,8 +1,10 @@
 package org.vmstudio.visor.core.client.render.helpers;
 
+//? if >=1.20.5 {
+import com.mojang.blaze3d.platform.Lighting;
+//?}
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import org.vmstudio.visor.mixin.client.accessors.RenderSystemAccessor;
 import org.vmstudio.visor.api.client.player.pose.VRPlayerPoseClient;
 import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
@@ -16,6 +18,8 @@ import org.joml.Matrix4f;
 import org.vmstudio.visor.core.client.ClientContext;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+
+import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
 public class RenderPoseHelper {
 
@@ -47,23 +51,32 @@ public class RenderPoseHelper {
     }
 
     //? if >=1.20.5 {
-    public static Vector3f[] applyEyeSpaceLevelLights(VRRenderPass renderPass) {
-        Vector3f[] uploaded = RenderSystemAccessor.getShaderLightDirections();
-        Vector3f[] worldSpace = {
-                new Vector3f(uploaded[0]),
-                new Vector3f(uploaded[1])
-        };
+    // Lighting.DIFFUSE_LIGHT_0 / DIFFUSE_LIGHT_1 / NETHER_DIFFUSE_LIGHT_1, which are private
+    private static final Vector3fc LEVEL_LIGHT_0 = new Vector3f(0.2F, 1.0F, -0.7F).normalize();
+    private static final Vector3fc LEVEL_LIGHT_1 = new Vector3f(-0.2F, 1.0F, 0.7F).normalize();
+    private static final Vector3fc NETHER_LEVEL_LIGHT_1 = new Vector3f(-0.2F, -1.0F, 0.7F).normalize();
+
+
+    public static void setupEyeSpaceLevelLights(VRRenderPass renderPass) {
+        Vector3fc light1 = isConstantAmbient() ? NETHER_LEVEL_LIGHT_1 : LEVEL_LIGHT_1;
 
         Matrix4f view = getViewRotation(renderPass);
         RenderSystem.setShaderLights(
-                view.transformDirection(new Vector3f(worldSpace[0])),
-                view.transformDirection(new Vector3f(worldSpace[1]))
+                view.transformDirection(LEVEL_LIGHT_0, new Vector3f()),
+                view.transformDirection(light1, new Vector3f())
         );
-        return worldSpace;
     }
 
-    public static void restoreLevelLights(Vector3f[] worldSpace) {
-        RenderSystem.setShaderLights(worldSpace[0], worldSpace[1]);
+    public static void restoreLevelLights() {
+        if (isConstantAmbient()) {
+            Lighting.setupNetherLevel();
+        } else {
+            Lighting.setupLevel();
+        }
+    }
+
+    private static boolean isConstantAmbient() {
+        return MC.level != null && MC.level.effects().constantAmbientLight();
     }
     //?}
 

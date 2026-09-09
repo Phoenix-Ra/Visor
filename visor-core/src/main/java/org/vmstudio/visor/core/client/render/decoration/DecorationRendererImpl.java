@@ -2,7 +2,6 @@ package org.vmstudio.visor.core.client.render.decoration;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import org.joml.Vector3f;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McModelViewStack;
 import org.vmstudio.visor.core.client.render.helpers.RenderPoseHelper;
 import lombok.Getter;
@@ -124,13 +123,14 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
             stage.run();
             return;
         }
-        Vector3f[] levelLights = RenderPoseHelper.applyEyeSpaceLevelLights(
-                VRRenderState.getRenderPass());
-        try {
-            runStage(stage);
-        } finally {
-            RenderPoseHelper.restoreLevelLights(levelLights);
-        }
+        runStage(() -> {
+            RenderPoseHelper.setupEyeSpaceLevelLights(VRRenderState.getRenderPass());
+            try {
+                stage.run();
+            } finally {
+                RenderPoseHelper.restoreLevelLights();
+            }
+        });
         //?} else {
         /*stage.run();
         *///?}
@@ -140,7 +140,7 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
     public void renderMainMenu(PoseStack poseStack, float partialTicks) {
         if (currentDecorator == null) return;
 
-        runStage(() -> {
+        runLevelStage(() -> {
             renderAfterSolid(poseStack, partialTicks);
             callStageEvent(RenderPipelineStage.AFTER_SOLID, poseStack, partialTicks);
 
