@@ -1,6 +1,9 @@
 package org.vmstudio.visor.api.compatibility;
 
 import lombok.Getter;
+//? if >=1.20.5 {
+import net.minecraft.tags.ItemTags;
+//?}
 import net.minecraft.world.item.*;
 
 import java.util.ArrayList;
@@ -11,8 +14,9 @@ public enum ItemClassifier {
     FARMING_TOOL((itemStack) -> itemStack.getItem() instanceof HoeItem),
     SHIELD((itemStack) -> itemStack.getItem() instanceof ShieldItem
             || itemStack.is(VisorItemTags.SHIELDS)),
-    SWORD((itemStack) -> itemStack.getItem() instanceof SwordItem),
-    SPEAR((itemStack) -> itemStack.getItem() instanceof TridentItem),
+    SWORD(ItemClassifier::isSword),
+    MACE(ItemClassifier::isMace),
+    SPEAR(ItemClassifier::isSpear),
     FOOD_STICK((itemStack) -> itemStack.getItem() instanceof FoodOnAStickItem),
     THROWABLE((itemStack) -> {
         Item item = itemStack.getItem();
@@ -56,5 +60,33 @@ public enum ItemClassifier {
 
     public boolean is(Item item) {
         return is(item.getDefaultInstance());
+    }
+
+
+    private static boolean isSword(ItemStack itemStack) {
+        //? if >=1.20.5 {
+        if (itemStack.is(ItemTags.SWORD_ENCHANTABLE)) {
+            return true;
+        }
+        //?}
+        return itemStack.getItem() instanceof SwordItem;
+    }
+
+    private static boolean isMace(ItemStack itemStack) {
+        //? if >=1.20.5 {
+        return itemStack.getItem() instanceof MaceItem
+                || itemStack.is(ItemTags.MACE_ENCHANTABLE);
+        //?} else {
+        /*return false;
+        *///?}
+    }
+
+    private static boolean isSpear(ItemStack itemStack) {
+        //? if >=1.20.5 {
+        if (itemStack.is(ItemTags.TRIDENT_ENCHANTABLE)) {
+            return true;
+        }
+        //?}
+        return itemStack.getItem() instanceof TridentItem;
     }
 }

@@ -204,6 +204,12 @@ public class VRItemPoseDefault extends VRHandItemPose {
                 translateY = 0.005f-0.04f;
                 yaw = -25;
             }
+            case MACE -> {
+                scale = 1.1f;
+                translateZ -= 0.1F;
+                translateY = 0.005f-0.04f;
+                yaw = -25;
+            }
             case SHIELD -> {
                 scale = 1.0f;
                 if (player.isUsingItem() && player.getUsedItemHand() == mcHand) {
@@ -329,6 +335,8 @@ public class VRItemPoseDefault extends VRHandItemPose {
 
         } else if (itemStack.getUseAnimation() == UseAnim.TOOT_HORN) {
             transformType = TransformType.HORN;
+        } else if (ItemClassifier.MACE.is(item)) {
+            transformType = TransformType.MACE;
         } else if (ItemClassifier.SWORD.is(item)) {
             transformType = TransformType.SWORD;
         } else if (ItemClassifier.SHIELD.is(item)) {
@@ -397,6 +405,7 @@ public class VRItemPoseDefault extends VRHandItemPose {
         BLOCK_ITEM,
         SHIELD,
         SWORD,
+        MACE,
         TOOL,
         FISHING_ROD,
         BOW,

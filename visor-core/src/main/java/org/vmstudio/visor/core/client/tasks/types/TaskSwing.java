@@ -184,8 +184,8 @@ public class TaskSwing extends VisorTask {
             final ItemProperties properties = getItemProperties(handItemStack, equipmentSlot);
             final float itemLength = properties.itemLength;
             final float damageRange = properties.damageRange;
-            final boolean isSword = properties.isSword;
-            final boolean itemRecognized = isSword || isTool(handItem);
+            final boolean isWeapon = properties.isWeapon;
+            final boolean itemRecognized = isWeapon || isTool(handItem);
 
             // Calculate the swing point based on hand position, direction, and item length
             final Vec3 swingPoint = calculateSwingPoint(handPos, handDir, itemLength);
@@ -240,7 +240,7 @@ public class TaskSwing extends VisorTask {
             }
 
             final BlockHitResult blockHit = findBlockHitAlongArc(
-                    player, handItemStack, isSword,
+                    player, handItemStack, isWeapon,
                     prevHandPos, prevHandRot, prevSwingPoint,
                     handPos, handRot, swingPoint,
                     itemLength
@@ -306,7 +306,9 @@ public class TaskSwing extends VisorTask {
 
     // Computes the effective item length and damage range based on the item type.
     private ItemProperties getItemProperties(final ItemStack itemStack, final EquipmentSlot slot) {
-        final boolean isSword = ItemClassifier.SWORD.is(itemStack.getItem()) || ItemClassifier.SPEAR.is(itemStack.getItem());
+        final boolean isWeapon = ItemClassifier.SWORD.is(itemStack.getItem())
+                || ItemClassifier.SPEAR.is(itemStack.getItem())
+                || ItemClassifier.MACE.is(itemStack.getItem());
 
         float itemLength;
         float damageRange;
@@ -320,7 +322,7 @@ public class TaskSwing extends VisorTask {
 
             // longer items get more of the base reach
             float reachShare;
-            if (isSword) {
+            if (isWeapon) {
                 itemLength = SWORD_LENGTH;
                 reachShare = 1F;
             } else if (isTool(itemStack.getItem())) {
@@ -335,7 +337,7 @@ public class TaskSwing extends VisorTask {
 
         itemLength *= ClientContext.localPlayer
                 .getPoseData(PlayerPoseType.TICK).getWorldScale();
-        return new ItemProperties(itemLength, damageRange, isSword);
+        return new ItemProperties(itemLength, damageRange, isWeapon);
     }
 
     // Attacks entities within the weapon reach. Each entity gets hit at most once per swing.
@@ -410,7 +412,7 @@ public class TaskSwing extends VisorTask {
 
     private BlockHitResult findBlockHitAlongArc(final LocalPlayer player,
                                                 final ItemStack handItemStack,
-                                                final boolean isSword,
+                                                final boolean isWeapon,
                                                 final Vec3 prevHandPos,
                                                 final Quaternionf prevHandRot,
                                                 final Vec3 prevSwingPoint,
@@ -460,8 +462,8 @@ public class TaskSwing extends VisorTask {
             if (TaskRoomClimb.isClimbableBlock(state.getBlock())) {
                 continue;
             }
-            // Swords only interact with blocks they break instantly
-            if (isSword && !canSwordBreak(player, handItemStack, state, hit)) {
+            // Weapons only interact with blocks they break instantly
+            if (isWeapon && !canWeaponBreak(player, handItemStack, state, hit)) {
                 continue;
             }
             // An inside hit means the tip started buried in the block
@@ -470,10 +472,10 @@ public class TaskSwing extends VisorTask {
         return null;
     }
 
-    private static boolean canSwordBreak(final LocalPlayer player,
-                                         final ItemStack itemStack,
-                                         final BlockState state,
-                                         final BlockHitResult hit) {
+    private static boolean canWeaponBreak(final LocalPlayer player,
+                                          final ItemStack itemStack,
+                                          final BlockState state,
+                                          final BlockHitResult hit) {
         return CommonUtils.withForcedHand(itemStack, () ->
                 itemStack.isCorrectToolForDrops(state)
                         || state.getDestroyProgress(player, player.level(), hit.getBlockPos()) == 1.0F);
@@ -715,7 +717,7 @@ public class TaskSwing extends VisorTask {
 
     private record ItemProperties(float itemLength,
                                   float damageRange,
-                                  boolean isSword) { }
+                                  boolean isWeapon) { }
 
     private record PendingBreak(BlockState state, int tick) { }
 }
