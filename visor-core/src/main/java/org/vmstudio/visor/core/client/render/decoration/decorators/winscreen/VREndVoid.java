@@ -61,28 +61,33 @@ public final class VREndVoid {
         RenderSystem.depthMask(true);
 
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotation(driftRad));
+        try {
+            poseStack.mulPose(Axis.YP.rotation(driftRad));
 
-        Matrix4f pose = poseStack.last().pose();
-        McVertexBuilder bufferBuilder = McVertexBuilder.get();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-        for (int[] face : FACES) {
-            for (int corner : face) {
-                float[] offset = CORNERS[corner];
-                bufferBuilder.vertex(
-                        pose,
-                        offset[0] * BOX,
-                        offset[1] * BOX,
-                        offset[2] * BOX
-                ).endVertex();
+            Matrix4f pose = poseStack.last().pose();
+            McVertexBuilder bufferBuilder = McVertexBuilder.get();
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            for (int[] face : FACES) {
+                for (int corner : face) {
+                    float[] offset = CORNERS[corner];
+                    bufferBuilder.vertex(
+                            pose,
+                            offset[0] * BOX,
+                            offset[1] * BOX,
+                            offset[2] * BOX
+                    ).endVertex();
+                }
             }
+            bufferBuilder.draw();
+        } finally {
+            poseStack.popPose();
+            //? if >=1.20.5 {
+            // per-eye value on a shared ShaderInstance, never leave it set
+            shader.safeGetUniform("IViewRotMat").set(new Matrix3f());
+            //?}
+            RenderSystemAccessor.setShaderGameTime(previousGameTime);
+            RenderSystem.depthFunc(GL11C.GL_LEQUAL);
+            RenderSystem.enableCull();
         }
-        bufferBuilder.draw();
-
-        poseStack.popPose();
-        //? if >=1.20.5 {
-        shader.safeGetUniform("IViewRotMat").set(new Matrix3f());
-        //?}
-        RenderSystemAccessor.setShaderGameTime(previousGameTime);
     }
 }

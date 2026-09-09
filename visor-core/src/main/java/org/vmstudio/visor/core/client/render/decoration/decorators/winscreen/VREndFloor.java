@@ -53,61 +53,65 @@ public final class VREndFloor {
         RenderSystem.depthMask(true);
 
         poseStack.pushPose();
-        poseStack.translate(
-                origin.x() - eye.x(),
-                origin.y() - eye.y(),
-                origin.z() - eye.z()
-        );
-        poseStack.mulPose(Axis.YN.rotation(-renderPose.getRotationY()));
-        float scale = renderPose.getWorldScale();
-        poseStack.scale(scale, scale, scale);
+        try {
+            poseStack.translate(
+                    origin.x() - eye.x(),
+                    origin.y() - eye.y(),
+                    origin.z() - eye.z()
+            );
+            poseStack.mulPose(Axis.YN.rotation(-renderPose.getRotationY()));
+            float scale = renderPose.getWorldScale();
+            poseStack.scale(scale, scale, scale);
 
-        Vector2f area = ClientUtils.getPlayAreaSize();
-        float x = area.x * 0.5f + MARGIN;
-        float z = area.y * 0.5f + MARGIN;
-        float y = -THICKNESS;
+            Vector2f area = ClientUtils.getPlayAreaSize();
+            float x = area.x * 0.5f + MARGIN;
+            float z = area.y * 0.5f + MARGIN;
+            float y = -THICKNESS;
 
-        Matrix4f pose = poseStack.last().pose();
-        McVertexBuilder bufferBuilder = McVertexBuilder.get();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            Matrix4f pose = poseStack.last().pose();
+            McVertexBuilder bufferBuilder = McVertexBuilder.get();
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
-        // top
-        quad(bufferBuilder, pose, TOP_SHADE,
-                -x, 0, -z, 0, 0,
-                -x, 0, z, 0, 2 * z,
-                x, 0, z, 2 * x, 2 * z,
-                x, 0, -z, 2 * x, 0);
-        // bottom
-        quad(bufferBuilder, pose, BOTTOM_SHADE,
-                -x, y, -z, 0, 0,
-                x, y, -z, 2 * x, 0,
-                x, y, z, 2 * x, 2 * z,
-                -x, y, z, 0, 2 * z);
-        // sides
-        quad(bufferBuilder, pose, SIDE_SHADE,
-                -x, 0, -z, 0, 0,
-                x, 0, -z, 2 * x, 0,
-                x, y, -z, 2 * x, THICKNESS,
-                -x, y, -z, 0, THICKNESS);
-        quad(bufferBuilder, pose, SIDE_SHADE,
-                x, 0, z, 0, 0,
-                -x, 0, z, 2 * x, 0,
-                -x, y, z, 2 * x, THICKNESS,
-                x, y, z, 0, THICKNESS);
-        quad(bufferBuilder, pose, SIDE_SHADE,
-                -x, 0, z, 0, 0,
-                -x, 0, -z, 2 * z, 0,
-                -x, y, -z, 2 * z, THICKNESS,
-                -x, y, z, 0, THICKNESS);
-        quad(bufferBuilder, pose, SIDE_SHADE,
-                x, 0, -z, 0, 0,
-                x, 0, z, 2 * z, 0,
-                x, y, z, 2 * z, THICKNESS,
-                x, y, -z, 0, THICKNESS);
+            // top
+            quad(bufferBuilder, pose, TOP_SHADE,
+                    -x, 0, -z, 0, 0,
+                    -x, 0, z, 0, 2 * z,
+                    x, 0, z, 2 * x, 2 * z,
+                    x, 0, -z, 2 * x, 0);
+            // bottom
+            quad(bufferBuilder, pose, BOTTOM_SHADE,
+                    -x, y, -z, 0, 0,
+                    x, y, -z, 2 * x, 0,
+                    x, y, z, 2 * x, 2 * z,
+                    -x, y, z, 0, 2 * z);
+            // sides
+            quad(bufferBuilder, pose, SIDE_SHADE,
+                    -x, 0, -z, 0, 0,
+                    x, 0, -z, 2 * x, 0,
+                    x, y, -z, 2 * x, THICKNESS,
+                    -x, y, -z, 0, THICKNESS);
+            quad(bufferBuilder, pose, SIDE_SHADE,
+                    x, 0, z, 0, 0,
+                    -x, 0, z, 2 * x, 0,
+                    -x, y, z, 2 * x, THICKNESS,
+                    x, y, z, 0, THICKNESS);
+            quad(bufferBuilder, pose, SIDE_SHADE,
+                    -x, 0, z, 0, 0,
+                    -x, 0, -z, 2 * z, 0,
+                    -x, y, -z, 2 * z, THICKNESS,
+                    -x, y, z, 0, THICKNESS);
+            quad(bufferBuilder, pose, SIDE_SHADE,
+                    x, 0, -z, 0, 0,
+                    x, 0, z, 2 * z, 0,
+                    x, y, z, 2 * z, THICKNESS,
+                    x, y, -z, 0, THICKNESS);
 
-        bufferBuilder.draw();
-
-        poseStack.popPose();
+            bufferBuilder.draw();
+        } finally {
+            poseStack.popPose();
+            RenderSystem.disableBlend();
+            RenderSystem.enableCull();
+        }
     }
 
     private static void quad(McVertexBuilder bufferBuilder,
