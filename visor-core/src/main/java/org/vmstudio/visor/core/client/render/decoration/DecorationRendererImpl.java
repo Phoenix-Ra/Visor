@@ -307,6 +307,13 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
 
     private void renderAfterWorld(PoseStack poseStack, float partialTicks) {
         if (currentDecorator == null) return;
+
+        // a foreign AFTER_LEVEL listener can leave the default framebuffer bound
+        // (RenderTarget.copyDepthFrom does), iris rebinds the eye target itself
+        if (!ShaderCompatHelper.isShaderActive()) {
+            MC.mainRenderTarget.bindWrite(true);
+        }
+
         if(currentDecorator.isFullControl()){
             currentDecorator.renderAfterWorld(poseStack, partialTicks);
             return;
