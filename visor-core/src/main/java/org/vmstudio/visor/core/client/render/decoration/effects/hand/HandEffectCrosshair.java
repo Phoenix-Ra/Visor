@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects.hand;
 
+import org.joml.*;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -16,10 +17,10 @@ import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.server.VRServerSettings;
 import org.vmstudio.visor.compatibility.ShaderCompatHelper;
+import org.vmstudio.visor.compatibility.sable.SableCompatHelper;
 import org.vmstudio.visor.core.client.ClientContext;
 import org.vmstudio.visor.extensions.client.render.GameRendererExtension;
 import org.vmstudio.visor.core.client.render.helpers.RenderPoseHelper;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -28,11 +29,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.joml.AxisAngle4f;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11C;
+
+import java.lang.Math;
 
 import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
@@ -153,6 +152,21 @@ public class HandEffectCrosshair extends VRHandEffect {
                                         VRPlayerPoseClient pose,
                                         HitResult hit) {
         if (hit instanceof BlockHitResult bhr && bhr.getType() != HitResult.Type.MISS) {
+            if (SableCompatHelper.isLoaded()) {
+                Quaterniond subLevelOrientation = SableCompatHelper.getSubLevelOrientation(MC.level, hit.getLocation());
+                if (subLevelOrientation != null) {
+                    // todo: this kind of works (crosshair is not vertically aligned for rotated sublevels)
+                    poseStack.mulPose(
+                            new Quaternionf(
+                                    (float) subLevelOrientation.x,
+                                    (float) subLevelOrientation.y,
+                                    (float) subLevelOrientation.z,
+                                    (float) subLevelOrientation.w
+                            )
+                    );
+                }
+            }
+
             switch (bhr.getDirection()) {
                 case DOWN -> {
                     rotateInDegrees(poseStack, pose.getHand(hand).getYawDegrees(), 0, 1, 0);
