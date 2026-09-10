@@ -151,11 +151,13 @@ public class HandEffectCrosshair extends VRHandEffect {
                                         HandType hand,
                                         VRPlayerPoseClient pose,
                                         HitResult hit) {
+        float yaw = pose.getHand(hand).getYawDegrees();
+
         if (hit instanceof BlockHitResult bhr && bhr.getType() != HitResult.Type.MISS) {
             if (SableCompatHelper.isLoaded()) {
                 Quaterniond subLevelOrientation = SableCompatHelper.getSubLevelOrientation(MC.level, hit.getLocation());
                 if (subLevelOrientation != null) {
-                    // todo: this kind of works (crosshair is not vertically aligned for rotated sublevels)
+                    yaw = 0; // otherwise vertical alignment on block would be broken
                     poseStack.mulPose(
                             new Quaternionf(
                                     (float) subLevelOrientation.x,
@@ -169,11 +171,11 @@ public class HandEffectCrosshair extends VRHandEffect {
 
             switch (bhr.getDirection()) {
                 case DOWN -> {
-                    rotateInDegrees(poseStack, pose.getHand(hand).getYawDegrees(), 0, 1, 0);
+                    rotateInDegrees(poseStack, yaw, 0, 1, 0);
                     rotateInDegrees(poseStack, -90, 1, 0, 0);
                 }
                 case UP -> {
-                    rotateInDegrees(poseStack, -pose.getHand(hand).getYawDegrees(), 0, 1, 0);
+                    rotateInDegrees(poseStack, -yaw, 0, 1, 0);
                     rotateInDegrees(poseStack,  90, 1, 0, 0);
                 }
                 case WEST -> rotateInDegrees(poseStack,  90, 0, 1, 0);
@@ -182,7 +184,7 @@ public class HandEffectCrosshair extends VRHandEffect {
                 default -> {}
             }
         } else {
-            rotateInDegrees(poseStack, -pose.getHand(hand).getYawDegrees(),   0, 1, 0);
+            rotateInDegrees(poseStack, -yaw,   0, 1, 0);
             rotateInDegrees(poseStack, -pose.getHand(hand).getPitchDegrees(), 1, 0, 0);
         }
     }
