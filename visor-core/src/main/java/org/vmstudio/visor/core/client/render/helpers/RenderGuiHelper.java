@@ -12,6 +12,7 @@ import org.vmstudio.visor.api.client.player.pose.VRPlayerPoseClient;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
 import org.vmstudio.visor.api.client.gui.overlays.VROverlay;
 import org.vmstudio.visor.api.client.gui.overlays.VROverlayPose;
+import org.vmstudio.visor.api.client.gui.helpers.TexturesHelper;
 import org.vmstudio.visor.compatibility.ShaderCompatHelper;
 import org.vmstudio.visor.extensions.client.render.GameRendererExtension;
 import org.vmstudio.visor.core.client.render.VRRenderState;
@@ -27,6 +28,9 @@ import org.lwjgl.opengl.GL11C;
 import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
 public class RenderGuiHelper {
+    // depth-layer overlays sit in the world, so they may get darker than HUD ones; Vivecraft's no-shader GUI floor
+    private static final int DEPTH_OVERLAY_MIN_LIGHT = 4;
+
     private RenderGuiHelper() {
         throw new UnsupportedOperationException("This is an utility class and cannot be instantiated");
     }
@@ -108,7 +112,7 @@ public class RenderGuiHelper {
             packedLight = ClientUtils.packedLightWithFloor(
                     MC.level,
                     BlockPos.containing(light.x(), light.y(), light.z()),
-                    ShaderCompatHelper.minShaderLight()
+                    depthAlways ? ShaderCompatHelper.minShaderLight() : DEPTH_OVERLAY_MIN_LIGHT
             );
             RenderHelper.renderDisplayQuadWithLight(
                     poseStack.last().pose(),
@@ -131,19 +135,7 @@ public class RenderGuiHelper {
 
         // --- Drag handle bar + resize handle
         if (drawDragHandle && overlay.supportsDragging()) {
-            float brightness = 1f;
-            if (packedLight >= 0) {
-                int blockLight = (packedLight >> 4) & 0xF;
-                int skyLight   = (packedLight >> 20) & 0xF;
-                brightness = Math.max(0.2f, Math.max(blockLight, skyLight) / 15f);
-            }
-            drawDragHandleBar(overlay, poseStack, barColor, brightness);
-            if (overlay.supportsResizing()) {
-                drawResizeHandle(overlay, poseStack, barColor, brightness);
-            }
-            if (resizing) {
-                drawResizeOutline(overlay, poseStack, barColor, brightness);
-            }
+            drawHandles(overlay, poseStack, barColor, packedLight, resizing);
         }
 
         // --- Restore ---
@@ -157,77 +149,20 @@ public class RenderGuiHelper {
         poseStack.popPose();
     }
 
-    private static void drawDragHandleBar(VROverlay overlay,
-                                          PoseStack poseStack,
-                                          AtumColor barColor,
-                                          float brightness) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        float aspect = overlay.getAspectRatio();
-        float halfWidth  = VROverlayPose.QUAD_SCALE * 0.5f;
-        float halfHeight = halfWidth * aspect;
-
+    private static void drawHandles(VROverlay overlay,
+                                    PoseStack poseStack,
+                                    AtumColor color,
+                                    int packedLight,
+                                    boolean resizing) {
         int width = overlay.getWidth();
         int height = overlay.getHeight();
         if (width <= 0 || height <= 0) {
             return;
         }
-        int edgeX = overlay.getCursorBoundsX();
-        int edgeY = overlay.getCursorBoundsY();
-        int edgeWidth = overlay.getCursorBoundsWidth();
-        int edgeHeight = overlay.getCursorBoundsHeight();
-        // -1 in any bound means "use the full overlay"
-        if (edgeX < 0) edgeX = 0;
-        if (edgeY < 0) edgeY = 0;
-        if (edgeWidth < 0) edgeWidth = width;
-        if (edgeHeight < 0) edgeHeight = height;
-
-        float nx0 = -halfWidth + ((float) edgeX / width) * (2f * halfWidth);
-        float nx1 = -halfWidth + ((float) (edgeX + edgeWidth) / width) * (2f * halfWidth);
-        float regionBottom = halfHeight - ((float) (edgeY + edgeHeight) / height) * (2f * halfHeight);
-        float barCenterX = (nx0 + nx1) * 0.5f;
-        float barHalfWidth = (nx1 - nx0) * 0.18f;
-
-        float barHalfHeight = halfHeight * 0.025f;
-        float barGap        = halfHeight * 0.04f;
-        float barCenterY    = regionBottom - barGap - barHalfHeight;
-
-        var pose = poseStack.last().pose();
-        McVertexBuilder buf = McVertexBuilder.get();
-        buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-
-        float r = barColor.getRed()   * brightness;
-        float g = barColor.getGreen() * brightness;
-        float b = barColor.getBlue()  * brightness;
-        float a = barColor.getAlpha();
-        float left   = barCenterX - barHalfWidth;
-        float right  = barCenterX + barHalfWidth;
-        float top    = barCenterY + barHalfHeight;
-        float bottom = barCenterY - barHalfHeight;
-        buf.vertex(pose, left,  bottom, 0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, right, bottom, 0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, right, top,    0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, left,  top,    0f).color(r, g, b, a).endVertex();
-
-        buf.draw();
-    }
-
-
-    private static void drawResizeHandle(VROverlay overlay,
-                                         PoseStack poseStack,
-                                         AtumColor color,
-                                         float brightness) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
         float aspect = overlay.getAspectRatio();
         float halfWidth  = VROverlayPose.QUAD_SCALE * 0.5f;
         float halfHeight = halfWidth * aspect;
 
-        int width = overlay.getWidth();
-        int height = overlay.getHeight();
-        if (width <= 0 || height <= 0) {
-            return;
-        }
         int edgeX = overlay.getCursorBoundsX();
         int edgeY = overlay.getCursorBoundsY();
         int edgeWidth = overlay.getCursorBoundsWidth();
@@ -243,74 +178,73 @@ public class RenderGuiHelper {
         float regionBottom = halfHeight - ((float) (edgeY + edgeHeight) / height) * (2f * halfHeight);
         float barCenterX   = (nx0 + nx1) * 0.5f;
         float barHalfWidth = (nx1 - nx0) * 0.18f;
-
         float barHalfHeight = halfHeight * 0.025f;
         float barGap        = halfHeight * 0.04f;
         float barCenterY    = regionBottom - barGap - barHalfHeight;
 
-        float gap  = barHalfWidth * 0.20f;
-        float side = barHalfHeight * 1.3f;
-        float left   = barCenterX + barHalfWidth + gap;
-        float right  = left + side * 2f;
-        float bottom = barCenterY - side;
-        float top    = barCenterY + side;
-
-        float r = color.getRed()   * brightness;
-        float g = color.getGreen() * brightness;
-        float b = color.getBlue()  * brightness;
-        float a = color.getAlpha();
-
         var pose = poseStack.last().pose();
         McVertexBuilder buf = McVertexBuilder.get();
-        buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        beginFlatQuads(buf, packedLight);
 
-        buf.vertex(pose, left,  bottom, 0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, right, bottom, 0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, right, top,    0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, left,  top,    0f).color(r, g, b, a).endVertex();
+        // drag bar
+        emitRect(buf, pose,
+                barCenterX - barHalfWidth, barCenterY - barHalfHeight,
+                barCenterX + barHalfWidth, barCenterY + barHalfHeight,
+                color, packedLight);
+
+        if (overlay.supportsResizing()) {
+            float gap  = barHalfWidth * 0.20f;
+            float side = barHalfHeight * 1.3f;
+            float left = barCenterX + barHalfWidth + gap;
+            emitRect(buf, pose, left, barCenterY - side, left + side * 2f, barCenterY + side, color, packedLight);
+        }
+
+        if (resizing) {
+            float thickness = halfWidth * 0.012f;
+            // top edge
+            emitRect(buf, pose, -halfWidth, halfHeight - thickness, halfWidth, halfHeight, color, packedLight);
+            // bottom edge
+            emitRect(buf, pose, -halfWidth, -halfHeight, halfWidth, -halfHeight + thickness, color, packedLight);
+            // left edge
+            emitRect(buf, pose, -halfWidth, -halfHeight + thickness, -halfWidth + thickness, halfHeight - thickness, color, packedLight);
+            // right edge
+            emitRect(buf, pose, halfWidth - thickness, -halfHeight + thickness, halfWidth, halfHeight - thickness, color, packedLight);
+        }
 
         buf.draw();
+        if (packedLight >= 0) {
+            MC.gameRenderer.lightTexture().turnOffLightLayer();
+        }
     }
 
-    private static void drawResizeOutline(VROverlay overlay,
-                                          PoseStack poseStack,
-                                          AtumColor color,
-                                          float brightness) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        float aspect = overlay.getAspectRatio();
-        float halfWidth  = VROverlayPose.QUAD_SCALE * 0.5f;
-        float halfHeight = halfWidth * aspect;
-        float thickness  = halfWidth * 0.012f;
-
-        float r = color.getRed()   * brightness;
-        float g = color.getGreen() * brightness;
-        float b = color.getBlue()  * brightness;
-        float a = color.getAlpha();
-
-        var pose = poseStack.last().pose();
-        McVertexBuilder buf = McVertexBuilder.get();
-        buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-
-        // top edge
-        emitRect(buf, pose, -halfWidth, halfHeight - thickness, halfWidth, halfHeight, r, g, b, a);
-        // bottom edge
-        emitRect(buf, pose, -halfWidth, -halfHeight, halfWidth, -halfHeight + thickness, r, g, b, a);
-        // left edge
-        emitRect(buf, pose, -halfWidth, -halfHeight + thickness, -halfWidth + thickness, halfHeight - thickness, r, g, b, a);
-        // right edge
-        emitRect(buf, pose, halfWidth - thickness, -halfHeight + thickness, halfWidth, halfHeight - thickness, r, g, b, a);
-
-        buf.draw();
+    private static void beginFlatQuads(McVertexBuilder buf, int packedLight) {
+        if (packedLight >= 0) {
+            RenderSystem.setShader(GameRenderer::getRendertypeTextShader);
+            RenderSystem.setShaderTexture(0, TexturesHelper.getWhiteTexture());
+            MC.gameRenderer.lightTexture().turnOnLightLayer();
+            buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
+        } else {
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        }
     }
 
     private static void emitRect(McVertexBuilder buf, Matrix4f pose,
                                  float left, float bottom, float right, float top,
-                                 float r, float g, float b, float a) {
-        buf.vertex(pose, left,  bottom, 0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, right, bottom, 0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, right, top,    0f).color(r, g, b, a).endVertex();
-        buf.vertex(pose, left,  top,    0f).color(r, g, b, a).endVertex();
+                                 AtumColor color, int packedLight) {
+        flatVertex(buf, pose, left,  bottom, color, packedLight);
+        flatVertex(buf, pose, right, bottom, color, packedLight);
+        flatVertex(buf, pose, right, top,    color, packedLight);
+        flatVertex(buf, pose, left,  top,    color, packedLight);
+    }
+
+    private static void flatVertex(McVertexBuilder buf, Matrix4f pose, float x, float y,
+                                   AtumColor color, int packedLight) {
+        buf.vertex(pose, x, y, 0f).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        if (packedLight >= 0) {
+            buf.uv(0.5f, 0.5f).uv2(packedLight);
+        }
+        buf.endVertex();
     }
 
 }

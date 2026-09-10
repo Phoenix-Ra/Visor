@@ -7,6 +7,8 @@ import org.vmstudio.visor.api.client.input.HapticFeedback;
 import com.google.common.collect.Sets;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -17,9 +19,11 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
+import org.vmstudio.visor.api.client.render.VRRenderPass;
 import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.common.utils.LoggerUtils;
 import org.vmstudio.visor.api.server.VRServerSettings;
@@ -105,6 +109,16 @@ public abstract class LevelRendererMixin implements ResourceManagerReloadListene
     @ModifyVariable(method = "prepareCullFrustum", at = @At("HEAD"), index = 3, argsOnly = true)
     private Matrix4f visor$widenCullFrustum(Matrix4f projection) {
         return CullFrustumHelper.widenCullProjection(projection);
+    }
+
+    @WrapOperation(method = "renderLevel", require = 1,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/lighting/LevelLightEngine;runLightUpdates()I"))
+    private int visor$lightUpdatesOncePerFrame(LevelLightEngine engine, Operation<Integer> original) {
+        if (VisorState.get().isNotActive() || VRRenderState.getPhase().isNotVRWorld()
+                || VRRenderState.getRenderPass() == VRRenderPass.worldUpdater()) {
+            return original.call(engine);
+        }
+        return 0;
     }
 
     //? if >=1.21 {

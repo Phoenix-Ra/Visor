@@ -50,7 +50,6 @@ public class RenderPoseHelper {
         frustumMatrix.mul(getViewRotation(renderPass));
     }
 
-    //? if >=1.20.5 {
     // Lighting.DIFFUSE_LIGHT_0 / DIFFUSE_LIGHT_1 / NETHER_DIFFUSE_LIGHT_1, which are private
     private static final Vector3fc LEVEL_LIGHT_0 = new Vector3f(0.2F, 1.0F, -0.7F).normalize();
     private static final Vector3fc LEVEL_LIGHT_1 = new Vector3f(-0.2F, 1.0F, 0.7F).normalize();
@@ -67,18 +66,20 @@ public class RenderPoseHelper {
         );
     }
 
+    // before 1.20.5 vanilla keeps the level lights in view space, so the eye-space upload already is its state
     public static void restoreLevelLights() {
+        //? if >=1.20.5 {
         if (isConstantAmbient()) {
             Lighting.setupNetherLevel();
         } else {
             Lighting.setupLevel();
         }
+        //?}
     }
 
     private static boolean isConstantAmbient() {
         return MC.level != null && MC.level.effects().constantAmbientLight();
     }
-    //?}
 
     public static Matrix4f getViewRotation(VRRenderPass renderPass) {
         float mirrorSmooth = VRClientSettings.getMirrorSmooth();
@@ -143,6 +144,7 @@ public class RenderPoseHelper {
                 .invert(new Matrix4f())
                 .transpose(new Matrix4f());
         poseStack.last().pose().mul(invRot);
+        poseStack.last().normal().mul(new Matrix3f(invRot));
 
         // scale to world scale
         float s = renderPose.getWorldScale();

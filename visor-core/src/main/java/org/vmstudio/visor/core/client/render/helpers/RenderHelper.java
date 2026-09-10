@@ -6,11 +6,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import me.phoenixra.atumvr.api.misc.color.AtumColor;
 import org.vmstudio.visor.api.common.utils.VRMathUtils;
-import org.vmstudio.visor.mixin.client.accessors.RenderSystemAccessor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -18,7 +15,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-import java.util.function.Supplier;
 
 import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
@@ -186,20 +182,7 @@ public class RenderHelper {
                                                   float displayWidth,
                                                   float displayHeight,
                                                   float size,
-                                                  int light,
-                                                  boolean flipY) {
-        renderDisplayQuadWithLight(poseMatrix, color, GameRenderer::getRendertypeEntityCutoutNoCullShader, displayWidth, displayHeight, size, light, flipY);
-    }
-
-
-
-    public static void renderDisplayQuadWithLight(Matrix4f poseMatrix,
-                                                  AtumColor color,
-                                                  Supplier<ShaderInstance> shader,
-                                                  float displayWidth,
-                                                  float displayHeight,
-                                                  float size,
-                                                  int light,
+                                                  int packedLight,
                                                   boolean flipY) {
         // --- Prepare variables ---
         float red = color.getRed();
@@ -229,32 +212,18 @@ public class RenderHelper {
         };
 
         // --- Setup ---
-        RenderSystem.setShader(shader);
+        RenderSystem.setShader(GameRenderer::getRendertypeTextShader);
         MC.gameRenderer.lightTexture().turnOnLightLayer();
-        MC.gameRenderer.overlayTexture().setupOverlayColor();
-
-        Vector3f[] lightDirs = RenderSystemAccessor.getShaderLightDirections();
-        Vector3f savedLight0 = lightDirs[0];
-        Vector3f savedLight1 = lightDirs[1];
-
-        Vector3f back = new Vector3f(VRMathUtils.BACK_VECTOR);
-        RenderSystem.setShaderLights(back, back);
-        RenderSystem.setupShaderLights(RenderSystem.getShader());
-
 
         // --- Render ---
         McVertexBuilder buf = McVertexBuilder.get();
-        buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.NEW_ENTITY);
+        buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
 
         for (int i = 0; i < 4; i++) {
-            float x = pos[i][0], y = pos[i][1];
-            float u = uv[i][0], v = uv[i][1];
-            buf.vertex(poseMatrix, x, y, 0f)
+            buf.vertex(poseMatrix, pos[i][0], pos[i][1], 0f)
                     .color(red, green, blue, alpha)
-                    .uv(u, v)
-                    .overlayCoords(OverlayTexture.NO_OVERLAY)
-                    .uv2(light)
-                    .normal(0f, 0f, 1f)
+                    .uv(uv[i][0], uv[i][1])
+                    .uv2(packedLight)
                     .endVertex();
         }
 
@@ -262,10 +231,6 @@ public class RenderHelper {
 
         // --- Restore ---
         MC.gameRenderer.lightTexture().turnOffLightLayer();
-        if (savedLight0 != null && savedLight1 != null) {
-            RenderSystem.setShaderLights(savedLight0, savedLight1);
-            RenderSystem.setupShaderLights(RenderSystem.getShader());
-        }
     }
 
 

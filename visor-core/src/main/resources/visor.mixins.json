@@ -37,7 +37,6 @@
     "client.renderer.LevelRendererMixin",
     "client.renderer.PostChainMixin",
     "client.renderer.VRLightsMixins$ClientLevelMixin",
-    "client.renderer.VRLightsMixins$LevelLightEngineMixin",
     "client.renderer.blaze3d.GlStateManagerMixin",
     "client.renderer.blaze3d.RenderSystemMixin",
     "client.renderer.blaze3d.RenderTargetMixin",

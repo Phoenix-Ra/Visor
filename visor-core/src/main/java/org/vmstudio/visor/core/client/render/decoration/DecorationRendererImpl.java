@@ -118,7 +118,6 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
     }
 
     private void runLevelStage(Runnable stage) {
-        //? if >=1.20.5 {
         if (VRRenderState.getPhase().isVanilla()) {
             stage.run();
             return;
@@ -131,9 +130,6 @@ public class DecorationRendererImpl implements VRDecorationRenderer {
                 RenderPoseHelper.restoreLevelLights();
             }
         });
-        //?} else {
-        /*stage.run();
-        *///?}
     }
 
     @Override
