@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 /* Plugin applied to the MOD LOADER subprojects */
 plugins {
     id "visor.minecraft"
@@ -14,7 +16,10 @@ configurations {
     apiResources  { canBeConsumed = false; canBeResolved = true }
     coreJava      { canBeConsumed = false; canBeResolved = true }
     coreResources { canBeConsumed = false; canBeResolved = true }
-    shadowBundle  { canBeConsumed = false; canBeResolved = true }
+    // Libraries the API exposes
+    apiBundle     { canBeConsumed = false; canBeResolved = true }
+    // Everything bundled into the mod jar
+    shadowBundle  { canBeConsumed = false; canBeResolved = true; extendsFrom apiBundle }
 }
 
 dependencies {
@@ -34,11 +39,11 @@ dependencies {
 
     modImplementation atumvr("api")
     modImplementation atumvr("core")
-    shadowBundle(atumvr("api")) { transitive = false }
-    shadowBundle(atumvr("core")) { transitive = false }
+    apiBundle(atumvr("api")) { transitive = false }
+    apiBundle(atumvr("core")) { transitive = false }
 
     implementation "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
-    shadowBundle "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
+    apiBundle "com.github.Phoenix-Ra:AtumConfiguration:${atumconfig_version}"
 }
 
 compileJava {
@@ -54,25 +59,27 @@ sourcesJar {
 }
 
 // ---- Mod jar pipeline -----------------------------------------------------------------------
-shadowJar {
-    configurations = [project.configurations.shadowBundle]
-    archiveClassifier = "dev-shadow"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    def relocations = [
-            "me.phoenixra.atumconfig": "atumconfig",
-            "org.yaml.snakeyaml"     : "snakeyaml",
-            "org.tomlj"              : "tomlj",
-            "org.antlr"              : "antlr",
-            "org.checkerframework"   : "checkerframework",
-            "com.google.gson"        : "gson",
-            "com.google.errorprone"  : "errorprone",       // annotations pulled in by gson
-            "redempt.crunch"         : "crunch",
-    ]
-    relocations.each { original, alias -> relocate original, "${mod_group}.${mod_id}.libs.${alias}" }
-
+def relocations = [
+        "org.yaml.snakeyaml"   : "snakeyaml",
+        "org.tomlj"            : "tomlj",
+        "org.antlr"            : "antlr",
+        "org.checkerframework" : "checkerframework",
+        "com.google.gson"      : "gson",
+        "com.google.errorprone": "errorprone",
+        "redempt.crunch"       : "crunch",
+]
+def bundleLibraries = { ShadowJar task, Configuration bundle ->
+    task.configurations = [bundle]
+    task.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    relocations.each { original, alias -> task.relocate original, "${mod_group}.${mod_id}.libs.${alias}" }
     // NEVER exclude META-INF/versions/**: Forge and Neoforge need it
-    exclude "META-INF/maven/**", "META-INF/proguard/**", "module-info.class"
+    task.exclude "META-INF/maven/**", "META-INF/proguard/**", "module-info.class"
+}
+
+shadowJar { task ->
+    archiveClassifier = "dev-shadow"
+    bundleLibraries(task, project.configurations.shadowBundle)
 }
 
 remapJar {
@@ -90,10 +97,12 @@ tasks.register("processApiResources", Sync) {
     inputs.properties(resourcePlaceholders)
 }
 
-tasks.register("apiJar", Jar) {
+
+tasks.register("apiJar", ShadowJar) { task ->
     from(sourceSets.main.output) { include apiPackage }
     from(processApiResources)
     archiveClassifier = "api-dev"
+    bundleLibraries(task, project.configurations.apiBundle)
 }
 
 tasks.register("remapApiJar", net.fabricmc.loom.task.RemapJarTask) {
