@@ -19,6 +19,7 @@ import org.vmstudio.visor.api.client.render.VRRenderPass;
 import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.server.VRServerSettings;
 import org.vmstudio.visor.compatibility.immportals.ImmPortalsCompatHelper;
+import org.vmstudio.visor.compatibility.sable.SableCompatHelper;
 import org.vmstudio.visor.core.client.VisorState;
 import org.vmstudio.visor.core.client.player.pose.LocalPlayerPose;
 import org.vmstudio.visor.core.client.tasks.types.movement.TaskTeleport;
@@ -415,7 +416,15 @@ public abstract class GameRendererMixin
         HitResult hitResult = this.minecraft.hitResult;
         if (hitResult != null && hitResult.getType() != HitResult.Type.MISS) {
             // includes entity hits missed by visor$pickPos
-            this.visor$aimHitPos = hitResult.getLocation();
+            if (SableCompatHelper.isLoaded()) {
+                this.visor$aimHitPos = SableCompatHelper.toWorldPos(
+                        this.minecraft.level,
+                        hitResult,
+                        hitResult.getLocation()
+                );
+            } else {
+                this.visor$aimHitPos = hitResult.getLocation();
+            }
         }
         visor$handHitResult[hand.ordinal()] = hitResult;
         visor$handAimHitPos[hand.ordinal()] = this.visor$aimHitPos;
@@ -552,7 +561,7 @@ public abstract class GameRendererMixin
                 McVersionClientUtils.blockPickRange(this.minecraft.gameMode, this.minecraft.player)
         );
         this.visor$aimHitPos = hitResult != null && hitResult.getType() != HitResult.Type.MISS
-                ? hitResult.getLocation()
+                ? SableCompatHelper.isLoaded() ? SableCompatHelper.toWorldPos(this.minecraft.level, hitResult, hitResult.getLocation()) : hitResult.getLocation()
                 : fallbackAimHitPos;
 
         return new Vec3((Vector3f) renderPose.getHand(hand).getPosition());
