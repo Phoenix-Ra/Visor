@@ -1,5 +1,8 @@
 name: Release build
 
+# Builds every Minecraft version and loader of a release tag and attaches the jars to the GitHub release.
+# Settings: .github/release.toml [build]. Helper: .github/scripts/release.py
+
 on:
   release:
     types: [published]
@@ -9,6 +12,10 @@ on:
         description: Release tag to build and attach jars to
         type: string
         required: true
+      task:
+        description: Gradle task instead of the configured one, e.g. build-1.20.1 to rebuild a single version
+        type: string
+        required: false
 
 concurrency:
   group: release-${{ github.event.release.tag_name || inputs.tag }}
@@ -17,113 +24,68 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
 jobs:
-  discover:
-    name: Discover version branches
-    uses: ./.github/workflows/discover.yml
-
   build:
-    name: Build ${{ matrix.branch }}
-    needs: discover
+    name: Build ${{ github.event.release.tag_name || inputs.tag }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        branch: ${{ fromJSON(needs.discover.outputs.branches) }}
     steps:
-      - name: Checkout ${{ matrix.branch }}
-        uses: actions/checkout@v4
+      - name: Checkout ${{ env.TAG }}
+        uses: actions/checkout@v7
         with:
-          ref: ${{ matrix.branch }}
+          ref: ${{ env.TAG }}
 
-      - name: Compute safe branch name
-        id: safe
-        run: echo "name=$(echo '${{ matrix.branch }}' | tr '/' '-')" >> "$GITHUB_OUTPUT"
+      - name: Read build settings
+        id: settings
+        run: |
+          set -euo pipefail
+          echo "java=$(python3 .github/scripts/release.py config build.java)" >> "$GITHUB_OUTPUT"
+          echo "task=$(python3 .github/scripts/release.py config build.task)" >> "$GITHUB_OUTPUT"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Set up JDK ${{ steps.settings.outputs.java }}
+        uses: actions/setup-java@v6
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: ${{ steps.settings.outputs.java }}
+          distribution: temurin
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      # ubuntu-latest has ~14 GB free, a Loom build of several Minecraft versions needs about that much
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      # --continue: a failing version does not stop the others, their jars still get attached
+      - name: Build (${{ inputs.task || steps.settings.outputs.task }})
+        id: build
+        continue-on-error: true
+        run: |
+          chmod +x ./gradlew
+          ./gradlew ${{ inputs.task || steps.settings.outputs.task }} --continue --stacktrace
 
       - name: Collect release jars
         id: collect
-        run: |
+        run: python3 .github/scripts/release.py collect
 
-          PLATFORMS=$(grep -oP '^enabled_platforms\s*=\s*\K.*' gradle.properties | tr -d '[:space:]')
-
-          mkdir -p release-assets
-
-          if [ -z "$PLATFORMS" ]; then
-            echo "::warning::Branch ${{ matrix.branch }}: could not resolve enabled_platforms from gradle.properties. This branch doesn't match the expected layout — skipping jar collection for it."
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "platforms=$PLATFORMS"
-
-          any_found=0
-          IFS=',' read -ra PLATS <<< "$PLATFORMS"
-          for p in "${PLATS[@]}"; do
-            p=$(echo "$p" | tr -d '[:space:]')
-            [ -z "$p" ] && continue
-            found=0
-            while IFS= read -r f; do
-              [ -z "$f" ] && continue
-              # gradle already names jars <base>-<modver>+mc<mc>-<loader>.jar; publish.yml parses that
-              name=$(basename "$f")
-              case "$name" in
-                *+mc*-"$p".jar) ;;
-                *) echo "::warning::Jar '$name' is not <base>-<modver>+mc<mc>-$p.jar — publish.yml will skip it" ;;
-              esac
-              # gh release upload reads assets as `file#label`, so '#' must not reach the name
-              name=$(printf '%s' "$name" | tr -c 'A-Za-z0-9._+-' '.')
-              cp "$f" "release-assets/$name"
-              echo "  $f -> release-assets/$name"
-              found=1
-              any_found=1
-            done < <(find . -path "*/visor-${p}/build/libs/*.jar" ! -name '*-dev.jar' ! -name '*-sources.jar')
-            if [ "$found" -eq 0 ]; then
-              echo "::warning::No release jar found for platform '$p' on branch ${{ matrix.branch }}"
-            fi
-          done
-
-          echo "Assets:"
-          ls -la release-assets/
-
-          if [ "$any_found" -eq 0 ]; then
-            echo "::warning::No release jars collected on branch ${{ matrix.branch }}"
-            echo "found=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Upload jars to the release
+      - name: Attach jars to the release
         if: steps.collect.outputs.found == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          TAG="${{ github.event.release.tag_name || inputs.tag }}"
-          gh release upload "$TAG" release-assets/*.jar \
-            --repo "${{ github.repository }}" --clobber
+        run: gh release upload "$TAG" build/release-assets/*.jar --repo "${{ github.repository }}" --clobber
 
-      - name: Upload build artifacts (traceability)
+      - name: Keep jars as workflow artifact
         if: steps.collect.outputs.found == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: release-${{ steps.safe.outputs.name }}
-          path: release-assets/*.jar
+          name: release-${{ env.TAG }}
+          path: build/release-assets/*.jar
           retention-days: 14
           if-no-files-found: error
+
+      - name: Fail on build errors
+        if: steps.build.outcome != 'success'
+        run: |
+          echo "::error::The Gradle build failed, see the Build step. Jars of the versions that did build were attached anyway, rerun with a single task (e.g. build-1.20.1) once fixed."
+          exit 1

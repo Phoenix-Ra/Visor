@@ -2,7 +2,6 @@
 plugins {
     id "visor.minecraft"
     id "com.gradleup.shadow"
-    id "maven-publish"
 }
 
 def loader = branch
@@ -107,20 +106,6 @@ tasks.register("remapApiJar", net.fabricmc.loom.task.RemapJarTask) {
 
 tasks.named("build") { dependsOn remapApiJar }
 
-// ---- Publishing -----------------------------------------------------------------------------
-publishing {
-    publications {
-        mod(MavenPublication) {
-            groupId = mod_group
-            artifactId = loader
-            version = project.version
-            artifact(remapApiJar) { classifier = null }
-            artifact(remapJar) { classifier = "mod" }
-            artifact remapSourcesJar
-        }
-    }
-}
-
 // ---- Running --------------------------------------------------------------------------------
 loom {
     mods {
@@ -145,10 +130,12 @@ tasks.register("buildAndCollect", Copy) {
     // (when u built and see lastChange to fabric jar was a while ago is annoying)
     outputs.upToDateWhen { false }
     def marker = "+mc${minecraft_version}-${loader}"
+    def current = "${base.archivesName.get()}-${mod_version}+"
     doFirst {
+        // previous builds of this target and every jar of another mod version
         def dir = rootProject.layout.buildDirectory.dir("libs").get().asFile
         dir.listFiles()?.each { f ->
-            if (f.name.endsWith(".jar") && f.name.contains(marker)) {
+            if (f.name.endsWith(".jar") && (f.name.contains(marker) || !f.name.startsWith(current))) {
                 f.delete()
             }
         }

@@ -30,9 +30,9 @@ def minor      = versionPart("version.minor").toInteger()
 def patch      = versionPart("version.patch").toInteger()
 def build      = versionPart("version.build").toInteger()
 
-ext.mod_version = (findProperty("modVersion") ?: (isSnapshot
+ext.mod_version = (isSnapshot
         ? "${major}.${minor}.${patch}${stage}-snapshot-${build}"
-        : "${major}.${minor}.${patch}${stage}")).toString()
+        : "${major}.${minor}.${patch}${stage}").toString()
 logger.lifecycle("Versioning: ${mod_version} (${isSnapshot ? 'SNAPSHOT' : 'RELEASE'})")
 
 

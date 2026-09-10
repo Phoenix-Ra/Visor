@@ -1,4 +1,0 @@
-jdk:
-  - openjdk21
-install:
-  - ./gradlew publishToMavenLocal -PmodVersion=$JITPACK_TAG

@@ -30,6 +30,20 @@ tasks.withType(JavaCompile).configureEach {
     options.release = javaVersion
 }
 
+// ---- Clean archives -----------------------------------------------------------------------
+def archivePrefix = "${base.archivesName.get()}-${version}"
+tasks.register("cleanStaleJars", Delete) {
+    description = "Deletes archives of other versions from build/libs and build/devlibs"
+    delete(["libs", "devlibs"].collect { dirName ->
+        fileTree(layout.buildDirectory.dir(dirName)) {
+            include "*.jar"
+            exclude "${archivePrefix}.jar", "${archivePrefix}-*.jar"
+        }
+    })
+}
+tasks.withType(AbstractArchiveTask).configureEach { mustRunAfter "cleanStaleJars" }
+tasks.named("assemble") { dependsOn "cleanStaleJars" }
+
 // ---- Repositories -------------------------------------------------------------------------
 repositories {
     mavenCentral()

@@ -1,0 +1,46 @@
+# Settings of .github/workflows/release.yml and publish.yml, read by .github/scripts/release.py.
+# Repository variables: MODRINTH_ID, CURSEFORGE_ID. Secrets: MODRINTH_TOKEN, CURSEFORGE_TOKEN.
+
+[build]
+java = "21"
+task = "buildAll"
+jars = "build/libs"
+exclude = ["*-dev*.jar", "*-sources.jar", "*-javadoc.jar"]
+
+
+[publish]
+# Version name and number on Modrinth/CurseForge.
+# Placeholders: {mod_name} {mod_version} {mc} {loader} {loaders},
+name = "{mod_name} {mod_version} - MC {mc} ({loader})"
+version = "{mod_version}+mc{mc}-{loader}"
+# mc-publish filter picking the versions inside a jar's Minecraft range, "releases" = every full release
+game_version_filter = "releases"
+# Optional: developer jars uploaded as additional files of the Modrinth version (not to CurseForge),
+# served by the Modrinth Maven as maven.modrinth:<slug>:<version>:<classifier>, e.g. the API jar
+# Visor-0.5.0+mc1.20.1-fabric-api.jar -> maven.modrinth:visor:0.5.0+mc1.20.1-fabric:api.
+# Leave the list empty in projects without them.
+modrinth_classifiers = ["api"]
+# The Maven finds a classifier jar only under the exact name <slug>-<version>-<classifier>.jar,
+# so they are uploaded under that name. Slug of the Modrinth project, leave empty to keep the asset name.
+modrinth_slug = "visor"
+
+# Version table of the project
+[publish.versions]
+file = "stonecutter.properties.toml"
+java = "java_version"
+range.fabric = "minecraft_version_range_fabric"
+range.forge = "minecraft_version_range_forgelike"
+range.neoforge = "minecraft_version_range_forgelike"
+
+# Loaders listed for a jar, by the loader in its file name. Quilt runs Fabric mods.
+[publish.loaders]
+fabric = ["fabric", "quilt"]
+forge = ["forge"]
+neoforge = ["neoforge"]
+
+# Dependencies listed for a jar, by the loader in its file name, in mc-publish syntax:
+#   id@version(type){modrinth:id}{curseforge:id}#(ignore:platform)
+[publish.dependencies]
+fabric = ["fabric-api(required){modrinth:P7dR8mSH}{curseforge:306612}"]
+forge = []
+neoforge = []
