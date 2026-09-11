@@ -12,6 +12,7 @@ import org.vmstudio.visor.core.client.ClientContext;
 import org.vmstudio.visor.api.client.settings.VRClientSettings;
 import org.vmstudio.visor.api.client.settings.enums.MovementMode;
 import org.vmstudio.visor.core.client.input.TreadmillInput;
+import org.vmstudio.visor.core.client.input.redirect.VRInputRedirectHandler;
 import org.vmstudio.visor.core.client.tasks.types.movement.TaskTeleport;
 import org.vmstudio.visor.core.client.utils.ClientUtils;
 import net.minecraft.util.Mth;
@@ -53,6 +54,12 @@ public class GameActionMovement extends VRActionVec2 {
         Vector2f rawMove = getState();
 
         Vector2f movement = ClientContext.localPlayer.getMovement();
+
+        if(VRInputRedirectHandler.INSTANCE.handle(MC.player, rawMove)){
+            movement.zero();
+            resetMovementState();
+            return;
+        }
 
         if(VRClientSettings.getMoveMode(MC.player) == MovementMode.TELEPORT){
             resetMovementState();
@@ -158,6 +165,8 @@ public class GameActionMovement extends VRActionVec2 {
 
     @Override
     protected void onClear() {
+        VRInputRedirectHandler.INSTANCE.stop();
+
         Vector2f input = ClientContext.localPlayer.getMovement();
 
         input.x = 0;

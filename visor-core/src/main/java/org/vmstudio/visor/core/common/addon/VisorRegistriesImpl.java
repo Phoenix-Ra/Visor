@@ -4,6 +4,7 @@ import org.vmstudio.visor.api.client.gui.overlays.VROverlay;
 import org.vmstudio.visor.api.client.gui.overlays.VROverlayTemplateRecord;
 import org.vmstudio.visor.api.client.gui.settings.VRSettingsPreset;
 import org.vmstudio.visor.api.client.input.action.VRActionSet;
+import org.vmstudio.visor.api.client.input.redirect.VRInputRedirect;
 import org.vmstudio.visor.api.client.player.body.VRBodyType;
 import org.vmstudio.visor.api.client.render.decoration.VRDecorator;
 import org.vmstudio.visor.api.client.render.decoration.effects.VRGameEffect;
@@ -32,6 +33,11 @@ public class VisorRegistriesImpl implements ComponentRegistries {
     @Override
     public @NotNull ComponentRegistry<VRActionSet> actionSets() {
         return ClientContext.inputManager.getActionSetRegistry();
+    }
+
+    @Override
+    public @NotNull ComponentRegistry<VRInputRedirect> inputRedirects() {
+        return ClientContext.inputManager.getInputRedirectRegistry();
     }
 
     @Override

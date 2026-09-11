@@ -30,6 +30,8 @@ config = "${mod_id}.iris.mixins.json"
 [[mixins]]
 config = "${mod_id}.blur.mixins.json"
 [[mixins]]
+config = "${mod_id}.aeronautics.mixins.json"
+[[mixins]]
 config = "${mod_id}.mixins.neoforge.json"
 
 [[dependencies.${mod_id}]]

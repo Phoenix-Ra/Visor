@@ -18,6 +18,7 @@ import org.vmstudio.visor.core.client.input.actions.ActionLeftMouse;
 import org.vmstudio.visor.core.client.input.actions.ActionMiddleMouse;
 import org.vmstudio.visor.core.client.input.actions.ActionRightMouse;
 import org.vmstudio.visor.core.client.input.actions.ActionScrollMouse;
+import org.vmstudio.visor.core.client.input.redirect.VRInputRedirectRegistry;
 import org.vmstudio.visor.core.client.provider.openxr.XrProvider;
 import org.vmstudio.visor.api.client.settings.VRClientSettings;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,9 @@ public class VRInputManagerImpl implements VRInputManager {
     private final ActionSetRegistry actionSetRegistry;
 
     @Getter
+    private final VRInputRedirectRegistry inputRedirectRegistry;
+
+    @Getter
     private VRActionSet activeSet;
 
     @Setter
@@ -40,6 +44,7 @@ public class VRInputManagerImpl implements VRInputManager {
 
     public VRInputManagerImpl(){
         actionSetRegistry = new ActionSetRegistry();
+        inputRedirectRegistry = new VRInputRedirectRegistry();
 
     }
 
@@ -172,7 +177,8 @@ public class VRInputManagerImpl implements VRInputManager {
 
     public List<ComponentRegistry<?>> getComponentRegistries(){
         return List.of(
-                actionSetRegistry
+                actionSetRegistry,
+                inputRedirectRegistry
         );
     }
 }

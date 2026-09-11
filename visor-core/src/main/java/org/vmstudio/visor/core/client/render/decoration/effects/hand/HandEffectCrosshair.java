@@ -1,5 +1,6 @@
 package org.vmstudio.visor.core.client.render.decoration.effects.hand;
 
+import org.joml.*;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -16,11 +17,11 @@ import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.server.VRServerSettings;
 import org.vmstudio.visor.compatibility.ShaderCompatHelper;
+import org.vmstudio.visor.compatibility.sable.SableCompatHelper;
 import org.vmstudio.visor.core.client.ClientContext;
 import org.vmstudio.visor.core.client.utils.ClientUtils;
 import org.vmstudio.visor.extensions.client.render.GameRendererExtension;
 import org.vmstudio.visor.core.client.render.helpers.RenderPoseHelper;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
@@ -29,11 +30,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
-import org.joml.AxisAngle4f;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11C;
+
+import java.lang.Math;
 
 import static org.vmstudio.visor.core.client.VisorClientImpl.MC;
 
@@ -164,14 +163,31 @@ public class HandEffectCrosshair extends VRHandEffect {
                                         HandType hand,
                                         VRPlayerPoseClient pose,
                                         HitResult hit) {
+        float yaw = pose.getHand(hand).getYawDegrees();
+
         if (hit instanceof BlockHitResult bhr && bhr.getType() != HitResult.Type.MISS) {
+            if (SableCompatHelper.isLoaded()) {
+                Quaterniond subLevelOrientation = SableCompatHelper.getSubLevelOrientation(MC.level, hit.getLocation());
+                if (subLevelOrientation != null) {
+                    yaw = 0; // otherwise vertical alignment on block would be broken
+                    poseStack.mulPose(
+                            new Quaternionf(
+                                    (float) subLevelOrientation.x,
+                                    (float) subLevelOrientation.y,
+                                    (float) subLevelOrientation.z,
+                                    (float) subLevelOrientation.w
+                            )
+                    );
+                }
+            }
+
             switch (bhr.getDirection()) {
                 case DOWN -> {
-                    rotateInDegrees(poseStack, pose.getHand(hand).getYawDegrees(), 0, 1, 0);
+                    rotateInDegrees(poseStack, yaw, 0, 1, 0);
                     rotateInDegrees(poseStack, -90, 1, 0, 0);
                 }
                 case UP -> {
-                    rotateInDegrees(poseStack, -pose.getHand(hand).getYawDegrees(), 0, 1, 0);
+                    rotateInDegrees(poseStack, -yaw, 0, 1, 0);
                     rotateInDegrees(poseStack,  90, 1, 0, 0);
                 }
                 case WEST -> rotateInDegrees(poseStack,  90, 0, 1, 0);
@@ -180,7 +196,7 @@ public class HandEffectCrosshair extends VRHandEffect {
                 default -> {}
             }
         } else {
-            rotateInDegrees(poseStack, -pose.getHand(hand).getYawDegrees(),   0, 1, 0);
+            rotateInDegrees(poseStack, -yaw,   0, 1, 0);
             rotateInDegrees(poseStack, -pose.getHand(hand).getPitchDegrees(), 1, 0, 0);
         }
     }
