@@ -10,7 +10,8 @@ exclude = ["*-dev*.jar", "*-sources.jar", "*-javadoc.jar"]
 
 [publish]
 # Version name and number on Modrinth/CurseForge.
-# Placeholders: {mod_name} {mod_version} {mc} {loader} {loaders},
+# Placeholders: {mod_name} {mod_version} {mc} {loader} {loaders}
+# Modrinth takes 64 characters in a name and 32 in a version number, publish.yml stops before uploading when one is longer.
 name = "{mod_name} {mod_version} - MC {mc} ({loader})"
 version = "{mod_version}+mc{mc}-{loader}"
 # mc-publish filter picking the versions inside a jar's Minecraft range, "releases" = every full release

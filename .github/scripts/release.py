@@ -4,7 +4,7 @@
     release.py config <key>                      one setting, e.g. build.java
     release.py collect                           copy the release jars of [build] jars into build/release-assets/
     release.py matrix <assets.json> --tag T      release assets -> publish matrix (outputs: matrix, version_type)
-               [--versions FILE] [--only GLOB]
+               [--versions FILE] [--only GLOB] [--modrinth]
     release.py meta <jar> [<classifier jar>...]  mc-publish inputs of one release jar (outputs: name, version,
                --versions FILE [--version-type T] [--dir D]   loaders, game_versions, java, dependencies, filter,
                                                               files, downloads = "<asset> <path>" lines)
@@ -22,6 +22,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SETTINGS = ROOT / ".github" / "release.toml"
 NAME_SHAPE = "<base>-<mod version>+mc<minecraft version>-<loader>[-<classifier>].jar"
+# labrinth rejects the upload otherwise: version number 1-32 URL-safe characters, name 1-64
+MODRINTH_VERSION_MAX = 32
+MODRINTH_NAME_MAX = 64
+MODRINTH_VERSION_CHARS = re.compile(r'^[a-zA-Z0-9!@$()`.+,_"-]+$')
 
 
 # ---- GitHub Actions plumbing -------------------------------------------------------------------
@@ -188,6 +192,40 @@ def check_targets(entries, versions):
         warn(f"The jar for Minecraft {mc} {loader} is not in [targets]")
 
 
+def publish_names(entry, versions):
+    """(name, version number) of a release jar on the platforms, from publish.name / publish.version."""
+    loader = entry["loader"]
+    fields = {
+        "mod_name": versions.get("mod_name") or entry["base"],
+        "mod_version": entry["modver"],
+        "mc": entry["mc"],
+        "loader": loader,
+        "loaders": ", ".join(settings(f"publish.loaders.{loader}", [loader])),
+    }
+    try:
+        name = settings("publish.name", "{mod_name} {mod_version} - MC {mc} ({loader})").format(**fields)
+        version = settings("publish.version", "{mod_version}+mc{mc}-{loader}").format(**fields)
+    except (KeyError, IndexError, ValueError) as e:
+        placeholders = " ".join("{" + key + "}" for key in fields)
+        fail(f"publish.name / publish.version: bad placeholder {e}, available: {placeholders}")
+    return name, version
+
+
+def check_modrinth(entries, versions, strict):
+    """Names Modrinth would reject, caught before any upload: a failure with --modrinth, else a warning."""
+    problems = []
+    for entry in entries:
+        name, version = publish_names(entry, versions)
+        if len(version) > MODRINTH_VERSION_MAX or not MODRINTH_VERSION_CHARS.match(version):
+            problems.append(f"version number {version} ({len(version)} characters)")
+        if len(name) > MODRINTH_NAME_MAX:
+            problems.append(f"name {name} ({len(name)} characters)")
+    if problems:
+        report = fail if strict else warn
+        report(f"Modrinth takes {MODRINTH_VERSION_MAX} URL-safe characters in a version number and {MODRINTH_NAME_MAX} "
+               f"in a name, shorten publish.version / publish.name in {SETTINGS.relative_to(ROOT)}: " + "; ".join(problems))
+
+
 # ---- Commands ----------------------------------------------------------------------------------
 def cmd_config(args):
     value = settings(args.key)
@@ -219,7 +257,9 @@ def cmd_collect(args):
     else:
         warn(f"No release jars in {jars_dir}")
     entries = group_assets(collected, pattern)
-    check_targets(entries, load_versions(ROOT / settings("publish.versions.file", "")))
+    versions = load_versions(ROOT / settings("publish.versions.file", ""))
+    check_targets(entries, versions)
+    check_modrinth(entries, versions, strict=False)
     output(found=str(bool(collected)).lower(), count=len(collected))
 
 
@@ -253,7 +293,8 @@ def cmd_matrix(args):
         else:
             accepted.append(name)
     entries = group_assets(accepted, pattern)
-    check_targets(entries, load_versions(args.versions))
+    versions = load_versions(args.versions)
+    check_targets(entries, versions)
     if args.only:
         for entry in entries:
             if not fnmatch.fnmatchcase(entry["file"], args.only):
@@ -261,6 +302,7 @@ def cmd_matrix(args):
         entries = [entry for entry in entries if fnmatch.fnmatchcase(entry["file"], args.only)]
     if not entries:
         fail(f"No publishable jars on release {args.tag}, run the Release build workflow first")
+    check_modrinth(entries, versions, strict=args.modrinth)
     entries.sort(key=entry_key)
     for entry in entries:
         print(f"  {entry['file']}" + "".join(f" + {extra}" for extra in entry["extra"]))
@@ -293,19 +335,7 @@ def cmd_meta(args):
     dependencies = settings(f"publish.dependencies.{loader}", [])
     game_filter = settings("publish.game_version_filter", "releases")
 
-    fields = {
-        "mod_name": versions.get("mod_name") or match["base"],
-        "mod_version": match["modver"],
-        "mc": mc,
-        "loader": loader,
-        "loaders": ", ".join(loaders),
-    }
-    try:
-        name = settings("publish.name", "{mod_name} {mod_version} - MC {mc} ({loader})").format(**fields)
-        version = settings("publish.version", "{mod_version}+mc{mc}-{loader}").format(**fields)
-    except (KeyError, IndexError, ValueError) as e:
-        placeholders = " ".join("{" + key + "}" for key in fields)
-        fail(f"publish.name / publish.version: bad placeholder {e}, available: {placeholders}")
+    name, version = publish_names(match.groupdict(), versions)
 
     # The Modrinth Maven serves a classifier jar by its exact name <slug>-<version>-<classifier>.jar
     slug = settings("publish.modrinth_slug")
@@ -367,6 +397,7 @@ def main():
     p.add_argument("--tag", required=True)
     p.add_argument("--versions", help="version table of the release tag, checks [targets] against the assets")
     p.add_argument("--only", help="publish only main jars matching this pattern")
+    p.add_argument("--modrinth", action="store_true", help="fail on names Modrinth rejects instead of warning")
     p.set_defaults(run=cmd_matrix)
 
     p = commands.add_parser("meta", help="mc-publish inputs of one release jar")

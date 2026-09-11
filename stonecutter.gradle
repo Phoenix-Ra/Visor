@@ -23,17 +23,17 @@ def versionPart = { String key, boolean required = true ->
     return value ?: ""
 }
 
-def isSnapshot = versionPart("version.snapshot").toBoolean()
+def isAlpha    = versionPart("version.alpha").toBoolean()
 def stage      = versionPart("version.stage", false)
 def major      = versionPart("version.major").toInteger()
 def minor      = versionPart("version.minor").toInteger()
 def patch      = versionPart("version.patch").toInteger()
 def build      = versionPart("version.build").toInteger()
 
-ext.mod_version = (isSnapshot
-        ? "${major}.${minor}.${patch}${stage}-snapshot-${build}"
+ext.mod_version = (isAlpha
+        ? "${major}.${minor}.${patch}${stage}-alpha.${build}"
         : "${major}.${minor}.${patch}${stage}").toString()
-logger.lifecycle("Versioning: ${mod_version} (${isSnapshot ? 'SNAPSHOT' : 'RELEASE'})")
+logger.lifecycle("Versioning: ${mod_version} (${isAlpha ? 'ALPHA' : 'RELEASE'})")
 
 
 // ------ Generated build tasks ------------------------------------

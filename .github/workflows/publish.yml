@@ -73,7 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets > assets.json
-          python3 .github/scripts/release.py matrix assets.json --tag "$TAG" --only "$ONLY" --versions release-versions.toml
+          python3 .github/scripts/release.py matrix assets.json --tag "$TAG" --only "$ONLY" --versions release-versions.toml ${{ inputs.modrinth && '--modrinth' || '' }}
 
       - name: Save the release description as changelog
         env:
@@ -128,7 +128,8 @@ jobs:
             fi
           done <<< "$DOWNLOADS"
 
-      # fail-mode fail: a rejected upload fails this job, rerun the failed jobs (or only one platform) once fixed
+      # fail-mode fail: a rejected upload fails this job. Once fixed, dispatch again with `only` on the failed jars
+      # (a rerun of the failed jobs checks out the settings of the original run)
       - name: Publish to Modrinth
         if: ${{ inputs.modrinth && !inputs.dry_run }}
         uses: Kir-Antipov/mc-publish@v3.3
