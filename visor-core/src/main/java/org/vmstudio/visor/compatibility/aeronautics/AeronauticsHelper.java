@@ -12,6 +12,7 @@ public class AeronauticsHelper {
 
             registries.itemPoses().registerComponent(new CreativeStaffItemPose(owner));
             registries.inputRedirects().registerComponent(new AeroVRInputRedirect(owner));
+            registries.inputRedirects().registerComponent(new AeroStaffVRInputRedirect(owner));
         }
     }
 
