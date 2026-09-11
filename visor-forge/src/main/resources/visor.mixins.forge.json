@@ -6,7 +6,8 @@
   "refmap": "${mod_id}.refmap.json",
   "client": [
     "ForgeGameRendererMixin",
-    "ForgeIngameGuiVRMixin"
+    "ForgeIngameGuiVRMixin",
+    "ForgeSelectedItemNameMixin"
   ],
   "minVersion": "0.8.4"
 }
