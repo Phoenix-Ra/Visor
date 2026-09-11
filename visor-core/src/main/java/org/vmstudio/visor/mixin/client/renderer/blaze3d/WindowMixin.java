@@ -1,6 +1,8 @@
 package org.vmstudio.visor.mixin.client.renderer.blaze3d;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
+import org.vmstudio.visor.api.client.gui.overlays.framework.VROverlayScreen;
 import org.vmstudio.visor.core.client.VisorState;
 import org.vmstudio.visor.core.client.render.VRRenderState;
 import org.vmstudio.visor.extensions.client.WindowExtension;
@@ -30,11 +32,21 @@ public abstract class WindowMixin implements WindowExtension {
   //--------REPLACING VANILLA VALUES--------\\
     \* ********************************** */
 
+    // Overlay screen draws into a framebuffer of its own size
+    // not into the shared gui canvas,
+    // so, we need to override sizes here to avoid issues with tooltips
+    // (might be more than just tooltips issues)
+
     @Inject(method = "getWidth", at = @At("HEAD"), cancellable = true)
     void visor$vrWidth(CallbackInfoReturnable<Integer> cir) {
         if(VisorState.get().isActive()) {
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
             var phase = VRRenderState.getPhase();
-            if (phase.isVanilla() || phase.isVRGui()) {
+            if (overlay != null) {
+                cir.setReturnValue(
+                        visor$overlayPixelWidth(overlay)
+                );
+            } else if (phase.isVanilla() || phase.isVRGui()) {
                 cir.setReturnValue(
                         ClientContext.guiManager.getGuiWidth()
                 );
@@ -49,8 +61,13 @@ public abstract class WindowMixin implements WindowExtension {
     @Inject(method = "getHeight", at = @At("HEAD"), cancellable = true)
     void visor$vrHeight(CallbackInfoReturnable<Integer> cir) {
         if(VisorState.get().isActive()) {
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
             var phase = VRRenderState.getPhase();
-            if (phase.isVanilla() || phase.isVRGui()) {
+            if (overlay != null) {
+                cir.setReturnValue(
+                        visor$overlayPixelHeight(overlay)
+                );
+            } else if (phase.isVanilla() || phase.isVRGui()) {
                 cir.setReturnValue(
                         ClientContext.guiManager.getGuiHeight()
                 );
@@ -66,10 +83,10 @@ public abstract class WindowMixin implements WindowExtension {
     @Inject(method = "getScreenWidth", at = @At("HEAD"), cancellable = true)
     void visor$vrScreenWidth(CallbackInfoReturnable<Integer> cir) {
         if (VisorState.get().isActive()) {
-            cir.setReturnValue(
-                    ClientContext
-                            .guiManager
-                            .getGuiWidth()
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
+            cir.setReturnValue(overlay != null
+                    ? visor$overlayPixelWidth(overlay)
+                    : ClientContext.guiManager.getGuiWidth()
             );
         }
     }
@@ -77,10 +94,10 @@ public abstract class WindowMixin implements WindowExtension {
     @Inject(method = "getScreenHeight", at = @At("HEAD"), cancellable = true)
     void visor$vrScreenHeight(CallbackInfoReturnable<Integer> cir) {
         if (VisorState.get().isActive()) {
-            cir.setReturnValue(
-                    ClientContext
-                            .guiManager
-                            .getGuiHeight()
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
+            cir.setReturnValue(overlay != null
+                    ? visor$overlayPixelHeight(overlay)
+                    : ClientContext.guiManager.getGuiHeight()
             );
         }
     }
@@ -89,10 +106,10 @@ public abstract class WindowMixin implements WindowExtension {
     @Inject(method = "getGuiScaledWidth", at = @At("HEAD"), cancellable = true)
     void visor$vrGuiScaledWidth(CallbackInfoReturnable<Integer> cir) {
         if (VisorState.get().isActive()) {
-            cir.setReturnValue(
-                    ClientContext
-                            .guiManager
-                            .getGuiScaledWidth()
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
+            cir.setReturnValue(overlay != null
+                    ? overlay.width
+                    : ClientContext.guiManager.getGuiScaledWidth()
             );
         }
     }
@@ -100,10 +117,10 @@ public abstract class WindowMixin implements WindowExtension {
     @Inject(method = "getGuiScaledHeight", at = @At("HEAD"), cancellable = true)
     void visor$vrGuiScaledHeight(CallbackInfoReturnable<Integer> cir) {
         if (VisorState.get().isActive()) {
-            cir.setReturnValue(
-                    ClientContext
-                            .guiManager
-                            .getGuiScaledHeight()
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
+            cir.setReturnValue(overlay != null
+                    ? overlay.height
+                    : ClientContext.guiManager.getGuiScaledHeight()
             );
         }
     }
@@ -112,12 +129,25 @@ public abstract class WindowMixin implements WindowExtension {
     @Inject(method = "getGuiScale", at = @At("HEAD"), cancellable = true)
     void visor$vrScaleFactor(CallbackInfoReturnable<Double> cir) {
         if (VisorState.get().isActive()) {
-            cir.setReturnValue(
-                    (double) ClientContext
-                            .guiManager
-                            .getScaleFactor()
+            VROverlayScreen overlay = VROverlayScreen.getRenderingOverlay();
+            cir.setReturnValue((double) (overlay != null
+                    ? overlay.getGuiScaleFactor()
+                    : ClientContext.guiManager.getScaleFactor())
             );
         }
+    }
+
+
+    @Unique
+    private static int visor$overlayPixelWidth(VROverlayScreen overlay) {
+        RenderTarget target = overlay.getRenderTarget();
+        return target != null ? target.viewWidth : overlay.getRequestedWidth();
+    }
+
+    @Unique
+    private static int visor$overlayPixelHeight(VROverlayScreen overlay) {
+        RenderTarget target = overlay.getRenderTarget();
+        return target != null ? target.viewHeight : overlay.getRequestedHeight();
     }
 
 

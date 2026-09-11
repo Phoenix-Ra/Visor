@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -308,6 +309,26 @@ public abstract class VROverlayScreen extends McScreen implements VROverlay {
             onRender(
                     guiGraphics,
                     pMouseX, pMouseY,
+                    partialTicks
+            );
+        } finally {
+            renderingOverlay = previousRendering;
+        }
+    }
+
+    /**
+     * Renders overlay screen for target.
+     * Do not touch!
+     */
+    @ApiStatus.Internal
+    public final void renderToTarget(@NotNull GuiGraphics guiGraphics,
+                                     float partialTicks) {
+        VROverlayScreen previousRendering = renderingOverlay;
+        renderingOverlay = this;
+        try {
+            McGuiUtils.renderWithTooltip(
+                    this, guiGraphics,
+                    getMouseX(), getMouseY(),
                     partialTicks
             );
         } finally {
