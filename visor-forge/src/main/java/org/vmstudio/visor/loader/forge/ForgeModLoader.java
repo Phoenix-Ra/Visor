@@ -20,6 +20,7 @@ import org.vmstudio.visor.api.common.VRException;
 import org.vmstudio.visor.api.common.network.VisorChannel;
 import org.vmstudio.visor.api.common.network.VisorPayloadToClient;
 import org.vmstudio.visor.api.common.network.VisorPayloadToServer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -339,7 +340,12 @@ public class ForgeModLoader implements ModLoader {
         //?} else {
         /*PoseStack poseStack = event.getPoseStack();
         *///?}
-        float partialTicks = event.getPartialTick();
+        //? if >=1.21 {
+
+        float partialTicks = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+        //?} else {
+        /*float partialTicks = event.getPartialTick();
+        *///?}
 
         for (RenderPipelineCallback callback : callbacks) {
             callback.render(poseStack, partialTicks);
