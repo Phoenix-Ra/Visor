@@ -8,7 +8,10 @@ import org.vmstudio.visor.api.common.addon.VisorAddon;
 public class AeronauticsHelper {
     public static void initializeCompat(@NotNull VisorAddon owner) {
         if (isLoaded()) {
-            VisorAPI.addonManager().getRegistries().itemPoses().registerComponent(new CreativeStaffItemPose(owner));
+            var registries = VisorAPI.addonManager().getRegistries();
+
+            registries.itemPoses().registerComponent(new CreativeStaffItemPose(owner));
+            registries.inputRedirects().registerComponent(new AeroVRInputRedirect(owner));
         }
     }
 

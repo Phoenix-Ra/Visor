@@ -15,6 +15,7 @@ import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
 import org.vmstudio.visor.api.common.utils.VRMathUtils;
 import org.vmstudio.visor.api.server.VRServerSettings;
 import org.vmstudio.visor.core.client.ClientContext;
+import org.vmstudio.visor.core.client.input.redirect.VRInputRedirectHandler;
 import org.vmstudio.visor.api.client.settings.VRClientSettings;
 import org.vmstudio.visor.api.client.settings.enums.MovementMode;
 import org.vmstudio.visor.extensions.client.entity.LocalPlayerExtension;
@@ -139,6 +140,7 @@ public class TaskTeleport extends VisorTask implements VREventListener {
     public boolean isActive(LocalPlayer player) {
         if (ClientContext.visor.isFeatureDisabled(ClientFeature.INPUT_MOVEMENT)) return false;
         if (VRClientSettings.getMoveMode(player) != MovementMode.TELEPORT) return false;
+        if (VRInputRedirectHandler.INSTANCE.isRedirecting()) return false;
         if(TaskRoomClimb.getInstance().isGrabbed()) return false;
         if (player == null || !player.isAlive() || player.isPassenger()) return false;
         return !player.isSleeping();
