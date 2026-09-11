@@ -43,6 +43,7 @@ import org.vmstudio.visor.api.client.tasks.VisorTask;
 import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.eventbus.event.VREvent;
+import org.vmstudio.visor.compatibility.sable.SableCompatHelper;
 import org.vmstudio.visor.api.common.network.toserver.SwingAttackPayloadToServer;
 import org.vmstudio.visor.api.common.network.toserver.SwingBlockPayloadToServer;
 import org.vmstudio.visor.api.common.utils.VRMathUtils;
@@ -659,7 +660,9 @@ public class TaskSwing extends VisorTask {
                 ClipContext.Fluid.NONE,
                 MC.player
         ));
-        return hitResult.getType() == HitResult.Type.BLOCK ? hitResult.getLocation() : end;
+        return hitResult.getType() == HitResult.Type.BLOCK
+                ? SableCompatHelper.isLoaded() ? SableCompatHelper.toWorldPos(MC.level, hitResult, hitResult.getLocation()) : hitResult.getLocation()
+                : end;
     }
 
     private void blockDust(Vec3 at, int count, BlockState state,

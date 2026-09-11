@@ -7,6 +7,8 @@ import org.vmstudio.visor.api.client.gui.settings.RegisterVRSettingsPreset;
 import org.vmstudio.visor.api.client.gui.settings.VRSettingsPreset;
 import org.vmstudio.visor.api.client.input.action.RegisterActionSet;
 import org.vmstudio.visor.api.client.input.action.VRActionSet;
+import org.vmstudio.visor.api.client.input.redirect.RegisterVRInputRedirect;
+import org.vmstudio.visor.api.client.input.redirect.VRInputRedirect;
 import org.vmstudio.visor.api.client.player.body.RegisterVRBodyType;
 import org.vmstudio.visor.api.client.player.body.VRBodyType;
 import org.vmstudio.visor.api.client.render.decoration.VRDecorator;
@@ -51,6 +53,18 @@ public interface ComponentRegistries {
     @NotNull
     @Environment(EnvType.CLIENT)
     ComponentRegistry<VRActionSet> actionSets();
+
+
+    /**
+     * Get VR input redirect registry
+     *
+     * <p>Annotation to auto-register on load: {@link RegisterVRInputRedirect}</p>
+     *
+     * @return VR Input redirect registry instance
+     */
+    @NotNull
+    @Environment(EnvType.CLIENT)
+    ComponentRegistry<VRInputRedirect> inputRedirects();
 
 
 
